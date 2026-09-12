@@ -18,6 +18,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedButton } from '@/components/ui/themed-button';
 import { ThemedInput } from '@/components/ui/themed-input';
 import { GlassCard } from '@/components/ui/glass-card';
+import { GlassView } from 'expo-glass-effect';
 import { GradientView } from '@/components/ui/gradient-view';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -178,18 +179,24 @@ export default function AddressesScreen() {
           <Pressable
             onPress={() => router.back()}
             style={({ pressed }) => [
-              styles.iconBtn,
-              {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                borderColor: theme.glassBorder,
-              },
               pressed && { opacity: 0.7 },
             ]}>
-            <SymbolView
-              tintColor={theme.text}
-              name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-              size={18}
-            />
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? 'dark' : 'light'}
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                  borderColor: theme.glassBorder,
+                },
+              ]}>
+              <SymbolView
+                tintColor={theme.text}
+                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
+                size={18}
+              />
+            </GlassView>
           </Pressable>
 
           <View style={styles.headerTitleWrap}>
@@ -207,6 +214,11 @@ export default function AddressesScreen() {
               styles.addHeaderBtn,
               pressed && { opacity: 0.8 },
             ]}>
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
             <GradientView
               colors={Gradients.primary}
               direction="to-right"
@@ -426,25 +438,30 @@ export default function AddressesScreen() {
                     <Pressable
                       key={type}
                       onPress={() => setLabel(type)}
-                      style={[
-                        styles.typeChip,
-                        {
-                          backgroundColor: isSelected
-                            ? `${iconInfo.color}${isDark ? '30' : '18'}`
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.06)'
-                            : 'rgba(0, 0, 0, 0.05)',
-                          borderColor: isSelected ? iconInfo.color : theme.glassBorder,
-                        },
-                      ]}>
-                      <ThemedText
-                        type="smallBold"
-                        style={{
-                          color: isSelected ? iconInfo.color : theme.text,
-                          fontSize: 13,
-                        }}>
-                        {type}
-                      </ThemedText>
+                      style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+                      <GlassView
+                        glassEffectStyle="regular"
+                        colorScheme={isDark ? 'dark' : 'light'}
+                        style={[
+                          styles.typeChip,
+                          {
+                            backgroundColor: isSelected
+                              ? `${iconInfo.color}${isDark ? '30' : '18'}`
+                              : isDark
+                              ? 'rgba(255, 255, 255, 0.06)'
+                              : 'rgba(0, 0, 0, 0.05)',
+                            borderColor: isSelected ? iconInfo.color : theme.glassBorder,
+                          },
+                        ]}>
+                        <ThemedText
+                          type="smallBold"
+                          style={{
+                            color: isSelected ? iconInfo.color : theme.text,
+                            fontSize: 13,
+                          }}>
+                          {type}
+                        </ThemedText>
+                      </GlassView>
                     </Pressable>
                   );
                 })}
@@ -560,6 +577,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -781,9 +799,10 @@ const styles = StyleSheet.create({
   },
   typeChip: {
     paddingHorizontal: Spacing.three,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingVertical: Spacing.two,
+    borderRadius: 14,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   rowInputs: {
     flexDirection: 'row',

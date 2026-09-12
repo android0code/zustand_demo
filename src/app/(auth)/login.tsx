@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -70,8 +71,13 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            {/* Centered Aurora Glass Form Card */}
-            <GlassCard variant="glow" style={styles.authCard}>
+            {/* Centered Aurora Glass Form Card with crisp white border */}
+            <GlassCard
+              variant="glow"
+              style={[
+                styles.authCard,
+                { borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#ffffff' },
+              ]}>
               {/* Brand Logo Emblem */}
               <View style={styles.logoContainer}>
                 <GradientView
@@ -107,6 +113,11 @@ export default function LoginScreen() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
+                  style={StyleSheet.absoluteFill}
+                />
                 <ThemedText style={{ color: theme.primary, fontSize: 12, fontWeight: '700' }}>
                   ⚡ Tap to Auto-fill Demo Account
                 </ThemedText>
@@ -228,6 +239,23 @@ const styles = StyleSheet.create({
   authCard: {
     padding: Spacing.five,
     borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#6366f1',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow:
+          '0 16px 40px rgba(99, 102, 241, 0.12), 0 2px 6px rgba(255, 255, 255, 0.9) inset',
+      } as any,
+    }),
   },
   logoContainer: {
     alignItems: 'center',
@@ -265,7 +293,15 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
     marginBottom: Spacing.four,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   errorContainer: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',

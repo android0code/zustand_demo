@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ProductCard } from '@/components/ui/product-card';
 import { GlassCard } from '@/components/ui/glass-card';
+import { GlassView } from 'expo-glass-effect';
 import { GradientView } from '@/components/ui/gradient-view';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -89,18 +90,24 @@ export default function SubcategoryScreen() {
           <Pressable
             onPress={() => router.back()}
             style={({ pressed }) => [
-              styles.iconBtn,
-              {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                borderColor: theme.glassBorder,
-              },
               pressed && { opacity: 0.7 },
             ]}>
-            <SymbolView
-              tintColor={theme.text}
-              name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-              size={18}
-            />
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? 'dark' : 'light'}
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                  borderColor: theme.glassBorder,
+                },
+              ]}>
+              <SymbolView
+                tintColor={theme.text}
+                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
+                size={18}
+              />
+            </GlassView>
           </Pressable>
 
           <View style={styles.headerTitleWrap}>
@@ -117,18 +124,25 @@ export default function SubcategoryScreen() {
           <Pressable
             onPress={() => router.push('/cart')}
             style={({ pressed }) => [
-              styles.iconBtn,
-              {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                borderColor: theme.glassBorder,
-              },
+              { position: 'relative' },
               pressed && { opacity: 0.7 },
             ]}>
-            <SymbolView
-              tintColor={theme.text}
-              name={{ ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' }}
-              size={18}
-            />
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? 'dark' : 'light'}
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                  borderColor: theme.glassBorder,
+                },
+              ]}>
+              <SymbolView
+                tintColor={theme.text}
+                name={{ ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' }}
+                size={18}
+              />
+            </GlassView>
             {totalCartItems > 0 && (
               <View style={styles.topCartBadge}>
                 <ThemedText style={styles.topCartBadgeText}>{totalCartItems}</ThemedText>
@@ -212,6 +226,11 @@ export default function SubcategoryScreen() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
+                  style={StyleSheet.absoluteFill}
+                />
                 <ThemedText
                   type="smallBold"
                   style={{
@@ -244,6 +263,11 @@ export default function SubcategoryScreen() {
                       },
                       pressed && { opacity: 0.8 },
                     ]}>
+                    <GlassView
+                      glassEffectStyle="regular"
+                      colorScheme={isDark ? 'dark' : 'light'}
+                      style={StyleSheet.absoluteFill}
+                    />
                     <ThemedText
                       type="smallBold"
                       style={{
@@ -286,6 +310,11 @@ export default function SubcategoryScreen() {
                       },
                       pressed && { opacity: 0.75 },
                     ]}>
+                    <GlassView
+                      glassEffectStyle="regular"
+                      colorScheme={isDark ? 'dark' : 'light'}
+                      style={StyleSheet.absoluteFill}
+                    />
                     <ThemedText
                       type="small"
                       style={{
@@ -333,7 +362,15 @@ export default function SubcategoryScreen() {
               <View style={styles.productGrid}>
                 {sortedProducts.map((product) => (
                   <View key={product.id} style={styles.productGridItem}>
-                    <ProductCard product={product} />
+                    <ProductCard
+                      product={product}
+                      onPress={() => {
+                        router.push({
+                          pathname: '/product',
+                          params: { id: product.id },
+                        });
+                      }}
+                    />
                   </View>
                 ))}
               </View>
@@ -367,6 +404,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -453,6 +491,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     marginRight: Spacing.two,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   sortSection: {
     marginBottom: Spacing.four,
@@ -467,6 +513,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   gridSection: {
     marginBottom: Spacing.four,

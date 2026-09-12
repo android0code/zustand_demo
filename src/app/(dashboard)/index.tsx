@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -96,6 +97,11 @@ export default function ShopHomeScreen() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}>
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
+                  style={StyleSheet.absoluteFill}
+                />
                 <GradientView
                   colors={Gradients.primary}
                   direction="to-bottom-right"
@@ -131,7 +137,14 @@ export default function ShopHomeScreen() {
                 style={[styles.searchInput, { color: theme.text }]}
               />
               {localSearch.length > 0 ? (
-                <Pressable onPress={handleClearSearch} style={styles.clearBtn}>
+                <Pressable
+                  onPress={handleClearSearch}
+                  style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.6 }]}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    colorScheme={isDark ? 'dark' : 'light'}
+                    style={StyleSheet.absoluteFill}
+                  />
                   <ThemedText type="smallBold" themeColor="textSecondary">
                     ✕
                   </ThemedText>
@@ -149,7 +162,12 @@ export default function ShopHomeScreen() {
               {selectedCategory && (
                 <Pressable
                   onPress={() => setSelectedCategory(null)}
-                  style={styles.resetFilterPill}>
+                  style={({ pressed }) => [styles.resetFilterPill, pressed && { opacity: 0.75 }]}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    colorScheme={isDark ? 'dark' : 'light'}
+                    style={StyleSheet.absoluteFill}
+                  />
                   <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
                     Clear Filter
                   </ThemedText>
@@ -245,6 +263,11 @@ export default function ShopHomeScreen() {
                       },
                       pressed && { opacity: 0.75 },
                     ]}>
+                    <GlassView
+                      glassEffectStyle="regular"
+                      colorScheme={isDark ? 'dark' : 'light'}
+                      style={StyleSheet.absoluteFill}
+                    />
                     <ThemedText
                       type="smallBold"
                       style={{ color: activeCategoryObj.color, fontSize: 12 }}>
@@ -339,13 +362,18 @@ export default function ShopHomeScreen() {
                     handleClearSearch();
                     setSelectedCategory(null);
                   }}
-                  style={styles.clearFilterBtn}>
-                  <GradientView
-                    colors={Gradients.primary}
-                    direction="to-right"
+                  style={({ pressed }) => [styles.clearFilterBtn, pressed && { opacity: 0.85 }]}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    colorScheme={isDark ? 'dark' : 'light'}
                     style={styles.clearFilterBtnInner}>
+                    <GradientView
+                      colors={Gradients.primary}
+                      direction="to-right"
+                      style={StyleSheet.absoluteFill}
+                    />
                     <ThemedText style={styles.clearFilterText}>View All Products</ThemedText>
-                  </GradientView>
+                  </GlassView>
                 </Pressable>
               </GlassCard>
             ) : (
@@ -356,8 +384,8 @@ export default function ShopHomeScreen() {
                       product={product}
                       onPress={() => {
                         router.push({
-                          pathname: '/subcategory',
-                          params: { categoryId: product.categoryId, subcategoryId: product.subcategoryId },
+                          pathname: '/product',
+                          params: { id: product.id },
                         });
                       }}
                     />
@@ -398,12 +426,17 @@ export default function ShopHomeScreen() {
                 <ThemedText style={styles.floatingCartPrice}>
                   ${cartTotal.toFixed(2)}
                 </ThemedText>
-                <GradientView
-                  colors={Gradients.primary}
-                  direction="to-right"
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
                   style={styles.cartCtaPill}>
+                  <GradientView
+                    colors={Gradients.primary}
+                    direction="to-right"
+                    style={StyleSheet.absoluteFill}
+                  />
                   <ThemedText style={styles.cartCtaText}>View Cart →</ThemedText>
-                </GradientView>
+                </GlassView>
               </View>
             </GlassCard>
           </Pressable>
@@ -464,6 +497,14 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 24,
     borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   avatarCircle: {
     width: 40,
@@ -499,6 +540,13 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
     marginBottom: Spacing.four,
@@ -519,6 +567,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   categoryScroll: {
     paddingVertical: 4,
@@ -560,6 +616,14 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 12,
     borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   promoWrapper: {
     borderRadius: 24,
@@ -702,6 +766,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: 12,
     borderRadius: 14,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   clearFilterText: {
     color: '#ffffff',
@@ -770,6 +842,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   cartCtaText: {
     color: '#ffffff',

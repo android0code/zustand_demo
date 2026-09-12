@@ -3,8 +3,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
 
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/use-auth-store';
 
 SplashScreen.preventAutoHideAsync();
@@ -26,7 +26,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

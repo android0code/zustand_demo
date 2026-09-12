@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -140,7 +141,12 @@ export default function CartScreen() {
                   ]);
                 }
               }}
-              style={styles.clearBtn}>
+              style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.7 }]}>
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? 'dark' : 'light'}
+                style={StyleSheet.absoluteFill}
+              />
               <ThemedText type="smallBold" style={{ color: theme.danger }}>
                 Clear All
               </ThemedText>
@@ -195,47 +201,68 @@ export default function CartScreen() {
                         borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
                       },
                     ]}>
-                    {/* Left color icon badge with category symbol */}
-                    <View
-                      style={[
-                        styles.itemHeroBadge,
-                        {
-                          backgroundColor: isDark
-                            ? `${product.colorAccent}25`
-                            : `${product.colorAccent}15`,
-                          borderColor: `${product.colorAccent}35`,
-                        },
-                      ]}>
-                      <SymbolView
-                        tintColor={product.colorAccent}
-                        name={{
-                          ios: catSymbol.ios,
-                          android: catSymbol.android,
-                          web: catSymbol.android,
-                        }}
-                        size={20}
-                      />
-                    </View>
+                    {/* Left color icon badge & Middle details - Tap to view product */}
+                    <Pressable
+                      onPress={() =>
+                        router.push({
+                          pathname: '/product',
+                          params: { id: product.id },
+                        })
+                      }
+                      style={styles.itemMainPressable}>
+                      <View
+                        style={[
+                          styles.itemHeroBadge,
+                          {
+                            backgroundColor: isDark
+                              ? `${product.colorAccent}25`
+                              : `${product.colorAccent}15`,
+                            borderColor: `${product.colorAccent}35`,
+                          },
+                        ]}>
+                        <SymbolView
+                          tintColor={product.colorAccent}
+                          name={{
+                            ios: catSymbol.ios,
+                            android: catSymbol.android,
+                            web: catSymbol.android,
+                          }}
+                          size={20}
+                        />
+                      </View>
 
-                    {/* Middle details */}
-                    <View style={styles.itemDetails}>
-                      <ThemedText type="smallBold" numberOfLines={1} style={styles.itemName}>
-                        {product.name}
-                      </ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary" style={styles.itemBrand}>
-                        {product.brand} • {product.specs[0] || 'Standard'}
-                      </ThemedText>
-                      <ThemedText type="smallBold" style={styles.itemPrice}>
-                        ${(product.price * quantity).toFixed(2)}
-                      </ThemedText>
-                    </View>
+                      {/* Middle details */}
+                      <View style={styles.itemDetails}>
+                        <ThemedText type="smallBold" numberOfLines={1} style={styles.itemName}>
+                          {product.name}
+                        </ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary" style={styles.itemBrand}>
+                          {product.brand} • {product.specs[0] || 'Standard'}
+                        </ThemedText>
+                        <ThemedText type="smallBold" style={styles.itemPrice}>
+                          ${(product.price * quantity).toFixed(2)}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
 
                     {/* Right: Stepper & Remove */}
                     <View style={styles.itemActions}>
                       <Pressable
                         onPress={() => removeFromCart(product.id)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        style={styles.removeBtn}>
+                        style={({ pressed }) => [
+                          styles.removeBtn,
+                          {
+                            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)',
+                            borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+                          },
+                          pressed && { opacity: 0.7 },
+                        ]}>
+                        <GlassView
+                          glassEffectStyle="regular"
+                          colorScheme={isDark ? 'dark' : 'light'}
+                          style={StyleSheet.absoluteFill}
+                        />
                         <SymbolView
                           tintColor={theme.danger}
                           name={{ ios: 'trash.fill', android: 'delete', web: 'delete' }}
@@ -243,7 +270,9 @@ export default function CartScreen() {
                         />
                       </Pressable>
 
-                      <View
+                      <GlassView
+                        glassEffectStyle="regular"
+                        colorScheme={isDark ? 'dark' : 'light'}
                         style={[
                           styles.stepperWrap,
                           {
@@ -253,7 +282,7 @@ export default function CartScreen() {
                         ]}>
                         <Pressable
                           onPress={() => updateQuantity(product.id, quantity - 1)}
-                          style={styles.stepperBtn}>
+                          style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}>
                           <ThemedText type="smallBold">−</ThemedText>
                         </Pressable>
                         <ThemedText type="smallBold" style={styles.stepperValue}>
@@ -261,10 +290,10 @@ export default function CartScreen() {
                         </ThemedText>
                         <Pressable
                           onPress={() => updateQuantity(product.id, quantity + 1)}
-                          style={styles.stepperBtn}>
+                          style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}>
                           <ThemedText type="smallBold">+</ThemedText>
                         </Pressable>
-                      </View>
+                      </GlassView>
                     </View>
                   </View>
                 );
@@ -442,6 +471,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   scrollContent: {
     paddingHorizontal: Spacing.four,
@@ -491,6 +528,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     gap: Spacing.three,
   },
+  itemMainPressable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
   itemHeroBadge: {
     width: 48,
     height: 48,
@@ -523,6 +566,14 @@ const styles = StyleSheet.create({
   removeBtn: {
     padding: 6,
     borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   stepperWrap: {
     flexDirection: 'row',
@@ -531,6 +582,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 30,
     paddingHorizontal: 4,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   stepperBtn: {
     paddingHorizontal: 8,

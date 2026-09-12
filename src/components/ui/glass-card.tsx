@@ -39,7 +39,7 @@ export function GlassCard({
       return accentColor + (isDark ? '40' : '30');
     }
     if (variant === 'glow') {
-      return isDark ? 'rgba(99, 102, 241, 0.4)' : 'rgba(99, 102, 241, 0.3)';
+      return isDark ? 'rgba(255, 255, 255, 0.25)' : '#ffffff';
     }
     return theme.glassBorder;
   };
@@ -57,7 +57,7 @@ export function GlassCard({
   const dynamicCardStyle: ViewStyle = {
     backgroundColor: getBackgroundColor(),
     borderColor: getBorderColor(),
-    borderWidth: 1,
+    borderWidth: variant === 'glow' ? 2 : 1,
     borderRadius: 20,
     overflow: 'hidden',
     ...(elevated

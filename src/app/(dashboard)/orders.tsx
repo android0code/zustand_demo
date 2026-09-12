@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -368,6 +369,11 @@ export default function OrdersScreen() {
                         },
                         pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
                       ]}>
+                      <GlassView
+                        glassEffectStyle="regular"
+                        colorScheme={isDark ? 'dark' : 'light'}
+                        style={StyleSheet.absoluteFill}
+                      />
                       <SymbolView
                         tintColor="#ffffff"
                         name={{
@@ -584,10 +590,18 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 12,
     gap: 5,
+    overflow: 'hidden',
+    position: 'relative',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
     elevation: 3,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      } as any,
+    }),
   },
   reorderBtnText: {
     color: '#ffffff',

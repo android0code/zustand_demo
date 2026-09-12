@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -215,7 +216,9 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                   isDark ? styles.addBtnOuterDark : styles.addBtnOuterLight,
                   pressed && styles.buttonPressed,
                 ]}>
-                <View
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
                   style={[
                     styles.addBtnInner,
                     {
@@ -234,7 +237,7 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                     style={[styles.addButtonText, { color: product.colorAccent }]}>
                     Add
                   </ThemedText>
-                </View>
+                </GlassView>
               </Pressable>
             ) : (
               <View
@@ -242,7 +245,9 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                   styles.stepperContainer,
                   isDark ? styles.stepperOuterDark : styles.stepperOuterLight,
                 ]}>
-                <View
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? 'dark' : 'light'}
                   style={[
                     styles.stepperInner,
                     {
@@ -269,7 +274,7 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                       +
                     </ThemedText>
                   </Pressable>
-                </View>
+                </GlassView>
               </View>
             )}
           </View>
@@ -498,6 +503,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 18,
     borderWidth: 1.5,
+    overflow: 'hidden',
   },
   addButtonText: {
     fontWeight: '800',
@@ -525,6 +531,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1.5,
+    overflow: 'hidden',
     paddingHorizontal: 3,
     height: 30,
   },

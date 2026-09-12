@@ -14,6 +14,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { GlassView } from 'expo-glass-effect';
 import { GradientView } from './gradient-view';
 
 export interface ThemedButtonProps extends Omit<PressableProps, 'style'> {
@@ -145,6 +146,11 @@ export function ThemedButton({
             styles.innerGradientWrapper,
             { borderRadius: sizeConfig.innerRadius },
           ]}>
+          <GlassView
+            glassEffectStyle="regular"
+            colorScheme={isDark ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
           <GradientView
             colors={colors}
             direction="to-bottom-right"
@@ -171,8 +177,10 @@ export function ThemedButton({
         style,
       ]}
       {...props}>
-      {/* Front / Upper Inset Layer with Specular Highlight Rim */}
-      <View
+      {/* Front / Upper Inset Layer with Specular Highlight Rim and Native Glass Effect */}
+      <GlassView
+        glassEffectStyle="regular"
+        colorScheme={isDark ? 'dark' : 'light'}
         style={[
           styles.innerFront,
           {
@@ -180,10 +188,10 @@ export function ThemedButton({
             backgroundColor: getInnerBackground(false),
             borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#ffffff',
           },
-          isGlass && styles.glassEffect,
+          styles.glassEffect,
         ]}>
         {buttonContent}
-      </View>
+      </GlassView>
     </Pressable>
   );
 }
@@ -239,6 +247,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignSelf: 'stretch',
     borderWidth: 1.5,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.four,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { GlassView } from 'expo-glass-effect';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -83,14 +84,20 @@ export function CategoryChip({
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.inactiveChip,
-        {
-          backgroundColor: isDark ? 'rgba(20, 26, 38, 0.75)' : '#ffffff',
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.9)',
-        },
         pressed && styles.pressed,
       ]}>
-      {content}
+      <GlassView
+        glassEffectStyle="regular"
+        colorScheme={isDark ? 'dark' : 'light'}
+        style={[
+          styles.inactiveChip,
+          {
+            backgroundColor: isDark ? 'rgba(20, 26, 38, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.9)',
+          },
+        ]}>
+        {content}
+      </GlassView>
     </Pressable>
   );
 }
@@ -111,6 +118,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 24,
     borderWidth: 1,
+    overflow: 'hidden',
     marginRight: Spacing.two,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },

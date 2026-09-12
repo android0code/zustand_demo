@@ -20,11 +20,14 @@ import { GradientView } from '@/components/ui/gradient-view';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useTheme } from '@/hooks/use-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const signUp = useAuthStore((state) => state.signUp);
   const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -62,8 +65,13 @@ export default function SignUpScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            {/* Centered Aurora Glass Form Card */}
-            <GlassCard variant="glow" style={styles.authCard}>
+            {/* Centered Aurora Glass Form Card with crisp white border */}
+            <GlassCard
+              variant="glow"
+              style={[
+                styles.authCard,
+                { borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#ffffff' },
+              ]}>
               {/* Brand Logo Emblem */}
               <View style={styles.logoContainer}>
                 <GradientView
@@ -216,6 +224,23 @@ const styles = StyleSheet.create({
   authCard: {
     padding: Spacing.five,
     borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#06b6d4',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow:
+          '0 16px 40px rgba(6, 182, 212, 0.12), 0 2px 6px rgba(255, 255, 255, 0.9) inset',
+      } as any,
+    }),
   },
   logoContainer: {
     alignItems: 'center',

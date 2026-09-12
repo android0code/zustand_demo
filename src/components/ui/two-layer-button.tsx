@@ -14,6 +14,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { GlassView } from 'expo-glass-effect';
 
 export interface TwoLayerButtonProps extends Omit<PressableProps, 'style'> {
   title?: string;
@@ -91,8 +92,10 @@ export function TwoLayerButton({
         style,
       ]}
       {...props}>
-      {/* Front / Upper Inset Layer */}
-      <View
+      {/* Front / Upper Inset Layer with Native Glass Effect */}
+      <GlassView
+        glassEffectStyle="regular"
+        colorScheme={isDark ? 'dark' : 'light'}
         style={[
           styles.innerFront,
           isDark ? styles.innerFrontDark : styles.innerFrontLight,
@@ -119,7 +122,7 @@ export function TwoLayerButton({
             ) : null}
           </View>
         )}
-      </View>
+      </GlassView>
     </Pressable>
   );
 }
@@ -177,6 +180,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
+    overflow: 'hidden',
     paddingHorizontal: Spacing.three,
   },
   innerFrontLight: {

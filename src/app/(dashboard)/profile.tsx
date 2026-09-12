@@ -18,6 +18,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedButton } from '@/components/ui/themed-button';
 import { ThemedInput } from '@/components/ui/themed-input';
 import { GlassCard } from '@/components/ui/glass-card';
+import { GlassView } from 'expo-glass-effect';
 import { GradientView } from '@/components/ui/gradient-view';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useAuthStore } from '@/store/use-auth-store';
@@ -26,6 +27,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCartStore } from '@/store/use-cart-store';
 import { useOrderStore } from '@/store/use-order-store';
 import { useAddressStore } from '@/store/use-address-store';
+import { useThemeStore, type ThemeMode } from '@/store/use-theme-store';
 
 interface MenuItem {
   title: string;
@@ -53,6 +55,19 @@ export default function ProfileScreen() {
   const orders = useOrderStore((state) => state.orders);
   const totalCartItems = useCartStore((state) => state.getTotalItems());
   const addresses = useAddressStore((state) => state.addresses);
+  const themeMode = useThemeStore((state) => state.themeMode);
+  const setThemeMode = useThemeStore((state) => state.setThemeMode);
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    const label =
+      mode === 'dark' ? 'Dark Theme' : mode === 'light' ? 'Light Theme' : 'System Theme';
+    setSuccessMessage(`Switched to ${label}`);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 2500);
+  };
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -197,6 +212,36 @@ export default function ProfileScreen() {
           onPress: () => showFeatureNotice('Notifications'),
         },
         {
+          title: 'Theme & Appearance',
+          subtitle:
+            themeMode === 'system'
+              ? `System Mode (${colorScheme})`
+              : themeMode === 'dark'
+              ? 'Dark Obsidian Theme'
+              : 'Light Aurora Theme',
+          icon: {
+            ios:
+              themeMode === 'dark'
+                ? 'moon.fill'
+                : themeMode === 'light'
+                ? 'sun.max.fill'
+                : 'gearshape.fill',
+            android:
+              themeMode === 'dark'
+                ? 'mode_night'
+                : themeMode === 'light'
+                ? 'sunny'
+                : 'settings',
+          },
+          iconColor: themeMode === 'dark' ? '#c084fc' : themeMode === 'light' ? '#f59e0b' : '#06b6d4',
+          badge: themeMode.toUpperCase(),
+          onPress: () => {
+            const nextMode: ThemeMode =
+              themeMode === 'light' ? 'dark' : themeMode === 'dark' ? 'system' : 'light';
+            handleThemeChange(nextMode);
+          },
+        },
+        {
           title: 'Privacy & Security',
           subtitle: 'Manage login credentials & security',
           icon: { ios: 'lock.fill', android: 'lock' },
@@ -246,18 +291,24 @@ export default function ProfileScreen() {
             <Pressable
               onPress={openEditModal}
               style={({ pressed }) => [
-                styles.topHeaderEditBtn,
-                {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(99, 102, 241, 0.08)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(99, 102, 241, 0.2)',
-                },
                 pressed && { opacity: 0.7 },
               ]}>
-              <SymbolView
-                tintColor={theme.primary}
-                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-                size={16}
-              />
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? 'dark' : 'light'}
+                style={[
+                  styles.topHeaderEditBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(99, 102, 241, 0.08)',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(99, 102, 241, 0.2)',
+                  },
+                ]}>
+                <SymbolView
+                  tintColor={theme.primary}
+                  name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                  size={16}
+                />
+              </GlassView>
             </Pressable>
           </View>
 
@@ -341,22 +392,26 @@ export default function ProfileScreen() {
             {/* Frosted Action Button */}
             <Pressable
               onPress={openEditModal}
-              style={({ pressed }) => [
-                styles.editProfileButton,
-                {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(99, 102, 241, 0.06)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.18)',
-                },
-                pressed && { opacity: 0.8 },
-              ]}>
-              <SymbolView
-                tintColor={theme.primary}
-                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-                size={13}
-              />
-              <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
-                Edit Account Details
-              </ThemedText>
+              style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? 'dark' : 'light'}
+                style={[
+                  styles.editProfileButton,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(99, 102, 241, 0.06)',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.18)',
+                  },
+                ]}>
+                <SymbolView
+                  tintColor={theme.primary}
+                  name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                  size={13}
+                />
+                <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
+                  Edit Account Details
+                </ThemedText>
+              </GlassView>
             </Pressable>
           </View>
 
@@ -502,6 +557,155 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+          {/* Appearance & Theme Selector Card */}
+          <View style={styles.themeSectionWrap}>
+            <ThemedText
+              type="smallBold"
+              themeColor="textSecondary"
+              style={styles.menuSectionHeader}>
+              APPEARANCE & THEME
+            </ThemedText>
+
+            <View
+              style={[
+                styles.themeCard,
+                {
+                  backgroundColor: isDark ? '#141824' : '#ffffff',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                },
+              ]}>
+              <View style={styles.themeCardHeader}>
+                <View style={styles.themeTitleRow}>
+                  <View
+                    style={[
+                      styles.themeIconBubble,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(99, 102, 241, 0.2)'
+                          : 'rgba(99, 102, 241, 0.1)',
+                      },
+                    ]}>
+                    <SymbolView
+                      tintColor={theme.primary}
+                      name={{
+                        ios: isDark ? 'moon.fill' : 'sun.max.fill',
+                        android: isDark ? 'mode_night' : 'sunny',
+                        web: isDark ? 'mode_night' : 'sunny',
+                      }}
+                      size={18}
+                    />
+                  </View>
+                  <View>
+                    <ThemedText type="smallBold" style={styles.themeCardTitle}>
+                      Theme Mode
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.themeCardSubtitle}>
+                      {themeMode === 'system'
+                        ? `Auto (System: ${colorScheme})`
+                        : themeMode === 'dark'
+                        ? 'Dark Mode Active'
+                        : 'Light Mode Active'}
+                    </ThemedText>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.themeCurrentBadge,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(99, 102, 241, 0.18)'
+                        : 'rgba(99, 102, 241, 0.1)',
+                      borderColor: isDark
+                        ? 'rgba(99, 102, 241, 0.35)'
+                        : 'rgba(99, 102, 241, 0.25)',
+                    },
+                  ]}>
+                  <ThemedText style={[styles.themeCurrentBadgeText, { color: theme.primary }]}>
+                    {themeMode.toUpperCase()}
+                  </ThemedText>
+                </View>
+              </View>
+
+              {/* 3-Option Segmented Switcher */}
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? 'dark' : 'light'}
+                style={[
+                  styles.themeSegmentTrack,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.04)'
+                      : 'rgba(0, 0, 0, 0.03)',
+                    borderColor: isDark
+                      ? 'rgba(255, 255, 255, 0.06)'
+                      : 'rgba(0, 0, 0, 0.04)',
+                  },
+                ]}>
+                {[
+                  {
+                    id: 'light' as const,
+                    label: 'Light',
+                    icon: { ios: 'sun.max.fill' as const, android: 'sunny' as const, web: 'sunny' as const },
+                  },
+                  {
+                    id: 'dark' as const,
+                    label: 'Dark',
+                    icon: { ios: 'moon.fill' as const, android: 'mode_night' as const, web: 'mode_night' as const },
+                  },
+                  {
+                    id: 'system' as const,
+                    label: 'System',
+                    icon: { ios: 'gearshape.fill' as const, android: 'settings' as const, web: 'settings' as const },
+                  },
+                ].map((opt) => {
+                  const isSelected = themeMode === opt.id;
+                  return (
+                    <Pressable
+                      key={opt.id}
+                      onPress={() => handleThemeChange(opt.id)}
+                      style={({ pressed }) => [
+                        styles.themeSegmentBtnWrap,
+                        pressed && { opacity: 0.8 },
+                      ]}>
+                      <GlassView
+                        glassEffectStyle="regular"
+                        colorScheme={isDark ? 'dark' : 'light'}
+                        style={[
+                          styles.themeSegmentButton,
+                          isSelected
+                            ? [
+                                styles.themeSegmentSelected,
+                                isDark
+                                  ? styles.themeSegmentSelectedDark
+                                  : styles.themeSegmentSelectedLight,
+                              ]
+                            : null,
+                        ]}>
+                        <SymbolView
+                          tintColor={isSelected ? theme.primary : theme.textSecondary}
+                          name={opt.icon}
+                          size={16}
+                        />
+                        <ThemedText
+                          type="smallBold"
+                          style={[
+                            styles.themeSegmentText,
+                            {
+                              color: isSelected ? theme.primary : theme.textSecondary,
+                              fontWeight: isSelected ? '800' : '600',
+                            },
+                          ]}>
+                          {opt.label}
+                        </ThemedText>
+                      </GlassView>
+                    </Pressable>
+                  );
+                })}
+              </GlassView>
+            </View>
+          </View>
+
           {/* Grouped Menu Sections */}
           {menuSections.map((section, sIndex) => (
             <View key={sIndex} style={styles.menuSectionWrap}>
@@ -612,42 +816,46 @@ export default function ProfileScreen() {
           <View style={styles.logoutSection}>
             <Pressable
               onPress={handleLogout}
-              style={({ pressed }) => [
-                styles.logoutCard,
-                {
-                  backgroundColor: isDark ? '#1a1012' : '#fef2f2',
-                  borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
-                },
-                pressed && { opacity: 0.8 },
-              ]}>
-              <View style={styles.logoutIconSquare}>
+              style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? 'dark' : 'light'}
+                style={[
+                  styles.logoutCard,
+                  {
+                    backgroundColor: isDark ? '#1a1012' : '#fef2f2',
+                    borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.2)',
+                  },
+                ]}>
+                <View style={styles.logoutIconSquare}>
+                  <SymbolView
+                    tintColor={theme.danger}
+                    name={{
+                      ios: 'rectangle.portrait.and.arrow.right',
+                      android: 'logout',
+                      web: 'logout',
+                    }}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.logoutTextGroup}>
+                  <ThemedText type="smallBold" style={{ color: theme.danger, fontSize: 15 }}>
+                    Sign Out of Account
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
+                    Securely sign out of this device
+                  </ThemedText>
+                </View>
                 <SymbolView
                   tintColor={theme.danger}
                   name={{
-                    ios: 'rectangle.portrait.and.arrow.right',
-                    android: 'logout',
-                    web: 'logout',
+                    ios: 'chevron.right',
+                    android: 'chevron_right',
+                    web: 'chevron_right',
                   }}
-                  size={18}
+                  size={14}
                 />
-              </View>
-              <View style={styles.logoutTextGroup}>
-                <ThemedText type="smallBold" style={{ color: theme.danger, fontSize: 15 }}>
-                  Sign Out of Account
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-                  Securely sign out of this device
-                </ThemedText>
-              </View>
-              <SymbolView
-                tintColor={theme.danger}
-                name={{
-                  ios: 'chevron.right',
-                  android: 'chevron_right',
-                  web: 'chevron_right',
-                }}
-                size={14}
-              />
+              </GlassView>
             </Pressable>
 
             {/* App Footer */}
@@ -785,6 +993,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 14,
     borderWidth: 1,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -884,6 +1093,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 12,
     borderWidth: 1,
+    overflow: 'hidden',
     marginTop: Spacing.four,
   },
   vipCard: {
@@ -970,6 +1180,97 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
   },
+  themeSectionWrap: {
+    marginBottom: Spacing.four,
+  },
+  themeCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: Spacing.three + 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  themeCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.three,
+  },
+  themeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  themeIconBubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeCardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  themeCardSubtitle: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  themeCurrentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  themeCurrentBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  themeSegmentTrack: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    gap: 6,
+  },
+  themeSegmentBtnWrap: {
+    flex: 1,
+  },
+  themeSegmentButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  themeSegmentSelected: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  themeSegmentSelectedLight: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  themeSegmentSelectedDark: {
+    backgroundColor: '#1c2230',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  themeSegmentText: {
+    fontSize: 13,
+  },
   menuSectionWrap: {
     marginBottom: Spacing.four,
   },
@@ -1031,6 +1332,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three + 2,
     borderRadius: 18,
     borderWidth: 1,
+    overflow: 'hidden',
     gap: Spacing.three,
   },
   logoutIconSquare: {

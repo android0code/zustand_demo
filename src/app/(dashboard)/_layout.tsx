@@ -47,6 +47,11 @@ function SegmentedCapsuleTabBar({ state, navigation }: any) {
 
   const currentRoute = state.routes[state.index]?.name || 'index';
 
+  // Hide tab bar on dedicated deep detail screens like product details
+  if (currentRoute === 'product') {
+    return null;
+  }
+
   // Map sub-routes to parent tab
   const activeTabName =
     currentRoute === 'subcategory'
@@ -81,13 +86,11 @@ function SegmentedCapsuleTabBar({ state, navigation }: any) {
             styles.capsuleContainer,
             isDark ? styles.capsuleDark : styles.capsuleLight,
           ]}>
-          {Platform.OS === 'ios' && (
-            <GlassView
-              glassEffectStyle="regular"
-              colorScheme={isDark ? 'dark' : 'light'}
-              style={StyleSheet.absoluteFill}
-            />
-          )}
+          <GlassView
+            glassEffectStyle="regular"
+            colorScheme={isDark ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
 
           {TABS_CONFIG.map((tab) => {
             const isFocused = activeTabName === tab.name;
@@ -122,6 +125,13 @@ function SegmentedCapsuleTabBar({ state, navigation }: any) {
                       ? (isDark ? styles.selectedPillDark : styles.selectedPillLight)
                       : styles.normalPill,
                   ]}>
+                  {isFocused && (
+                    <GlassView
+                      glassEffectStyle="regular"
+                      colorScheme={isDark ? 'dark' : 'light'}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  )}
                   <View style={styles.iconContainer}>
                     <SymbolView
                       tintColor={isFocused ? activeColor : inactiveColor}
@@ -212,6 +222,13 @@ export default function DashboardLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="product"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
@@ -291,6 +308,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 3,
+    overflow: 'hidden',
+    position: 'relative',
   },
   selectedPillLight: {
     // Fully rounded elevated white pill for all selected tabs
