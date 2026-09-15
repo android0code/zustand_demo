@@ -13,6 +13,7 @@ export interface CategoryChipProps {
   icon?: SFSymbol;
   androidIcon?: AndroidSymbol;
   color?: string;
+  badge?: string;
   isActive?: boolean;
   onPress: () => void;
 }
@@ -22,6 +23,7 @@ export function CategoryChip({
   icon,
   androidIcon,
   color = '#6366f1',
+  badge,
   isActive = false,
   onPress,
 }: CategoryChipProps) {
@@ -60,6 +62,28 @@ export function CategoryChip({
         ]}>
         {title}
       </ThemedText>
+
+      {badge ? (
+        <View
+          style={[
+            styles.chipBadge,
+            {
+              backgroundColor: isActive
+                ? 'rgba(255, 255, 255, 0.25)'
+                : isDark
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(0, 0, 0, 0.06)',
+            },
+          ]}>
+          <ThemedText
+            style={[
+              styles.chipBadgeText,
+              { color: isActive ? '#ffffff' : theme.textSecondary },
+            ]}>
+            {badge}
+          </ThemedText>
+        </View>
+      ) : null}
     </View>
   );
 
@@ -148,6 +172,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     letterSpacing: 0.2,
+  },
+  chipBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginLeft: 4,
+  },
+  chipBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   pressed: {
     transform: [{ scale: 0.96 }],

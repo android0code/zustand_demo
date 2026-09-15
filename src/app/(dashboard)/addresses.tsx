@@ -171,13 +171,21 @@ export default function AddressesScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/profile');
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         {/* Top Header Bar */}
         <View style={styles.topBar}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={({ pressed }) => [
               pressed && { opacity: 0.7 },
             ]}>

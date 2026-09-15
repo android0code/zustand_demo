@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import ecommerceData from '@/data/ecommerce-data.json';
 import type { SFSymbol, AndroidSymbol } from 'expo-symbols';
 
@@ -15,6 +16,7 @@ export interface Category {
   androidIcon: AndroidSymbol;
   color: string;
   description: string;
+  status?: 'live' | 'coming_soon';
   subcategories: Subcategory[];
 }
 
@@ -33,6 +35,16 @@ export interface Product {
   colorAccent: string;
   specs: string[];
   description: string;
+  bonus?: string;
+  image?: string;
+  downloadUrl?: string;
+  fileFormat: string;
+  fileSize: string;
+  version: string;
+  license: string;
+  downloadFileName: string;
+  downloadContent?: string;
+  status?: 'live' | 'coming_soon';
 }
 
 export interface OrderItem {
@@ -41,7 +53,7 @@ export interface OrderItem {
   unitPrice: number;
 }
 
-export type OrderStatus = 'Processing' | 'Shipped' | 'Delivered';
+export type OrderStatus = 'Processing' | 'Completed' | 'Shipped' | 'Delivered' | 'Cancelled';
 
 export interface Order {
   id: string;
@@ -53,53 +65,125 @@ export interface Order {
   total: number;
   status: OrderStatus;
   shippingAddress: string;
+  customerEmail?: string;
+  licenseKey?: string;
+  rewardCouponCode?: string;
 }
 
 export interface CreateOrderInput {
   items: { product: Product; quantity: number }[];
-  shippingAddress: string;
+  shippingAddress?: string;
+  customerEmail?: string;
+  licenseKey?: string;
+  rewardCouponCode?: string;
 }
 
-// Initial mock orders to provide immediate rich history
+// Browser download helper for digital goods
+export function triggerBrowserDownload(
+  filename: string,
+  content?: string,
+  downloadUrl?: string
+): boolean {
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    try {
+      if (downloadUrl) {
+        const fileUrl =
+          downloadUrl.startsWith('http') || downloadUrl.startsWith('/')
+            ? downloadUrl
+            : `/${downloadUrl}`;
+        fetch(fileUrl)
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.blob();
+          })
+          .then((blob) => {
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+          })
+          .catch((err) => {
+            console.warn('Direct blob fetch failed, falling back to anchor click:', err);
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = filename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          });
+        return true;
+      }
+
+      const payload =
+        content ||
+        `AA21PA-DIGITS ASSETS\n=====================\nFile: ${filename}\nDate: ${new Date().toISOString()}\nLicense: AA21PA-LIC-${Math.random()
+          .toString(36)
+          .substring(2, 9)
+          .toUpperCase()}\n\nThank you for purchasing on aa21pa-digits!\nSupport: aa21pa-solutions@gmail.com\n`;
+      const mimeType = filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
+      const blob = new Blob([payload], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      return true;
+    } catch (e) {
+      console.warn('Failed to trigger browser download', e);
+      return false;
+    }
+  }
+  return false;
+}
+
+// Initial mock orders to provide immediate rich history of purchased digital goods
 const inMemoryOrders: Order[] = [
   {
-    id: 'ORD-98421',
-    date: 'Sep 02, 2026',
+    id: 'ORD-89421',
+    date: 'Sep 10, 2026',
     items: [
       {
         product: ecommerceData.products[0] as Product,
         quantity: 1,
         unitPrice: ecommerceData.products[0].price,
       },
-      {
-        product: ecommerceData.products[3] as Product,
-        quantity: 1,
-        unitPrice: ecommerceData.products[3].price,
-      },
     ],
-    subtotal: 244.98,
-    tax: 19.60,
+    subtotal: 2.99,
+    tax: 0.24,
     shipping: 0.00,
-    total: 264.58,
-    status: 'Delivered',
-    shippingAddress: '42 Silicon Boulevard, San Jose, CA 95128',
+    total: 3.23,
+    status: 'Completed',
+    shippingAddress: 'Digital Delivery to aa21pa-solutions@gmail.com',
+    customerEmail: 'aa21pa-solutions@gmail.com',
+    licenseKey: 'AA21PA-AI-89K2-PRO',
+    rewardCouponCode: 'NEXTFREE-89K2',
   },
   {
-    id: 'ORD-97514',
-    date: 'Aug 24, 2026',
+    id: 'ORD-87514',
+    date: 'Sep 04, 2026',
     items: [
       {
-        product: ecommerceData.products[10] as Product,
+        product: ecommerceData.products[0] as Product,
         quantity: 1,
-        unitPrice: ecommerceData.products[10].price,
+        unitPrice: ecommerceData.products[0].price,
       },
     ],
-    subtotal: 79.99,
-    tax: 6.40,
-    shipping: 5.00,
-    total: 91.39,
-    status: 'Delivered',
-    shippingAddress: '42 Silicon Boulevard, San Jose, CA 95128',
+    subtotal: 2.99,
+    tax: 0.24,
+    shipping: 0.00,
+    total: 3.23,
+    status: 'Completed',
+    shippingAddress: 'Digital Delivery to aa21pa-solutions@gmail.com',
+    customerEmail: 'aa21pa-solutions@gmail.com',
+    licenseKey: 'AA21PA-AI-44B1-GUIDE',
   },
 ];
 
@@ -132,6 +216,7 @@ export const api = {
           item.name.toLowerCase().includes(q) ||
           item.brand.toLowerCase().includes(q) ||
           item.description.toLowerCase().includes(q) ||
+          item.fileFormat.toLowerCase().includes(q) ||
           item.specs.some((spec) => spec.toLowerCase().includes(q))
       );
     }
@@ -148,7 +233,7 @@ export const api = {
   async getFeaturedProducts(): Promise<Product[]> {
     await delay(120);
     return (ecommerceData.products as Product[]).filter(
-      (p) => p.badge && (p.badge.includes('OFF') || p.badge === 'TOP PICK' || p.badge === 'BESTSELLER')
+      (p) => p.badge && (p.badge.includes('OFF') || p.badge === 'BESTSELLER' || p.badge === 'HOT TEMPLATE' || p.badge === 'STAFF PICK')
     );
   },
 
@@ -165,7 +250,7 @@ export const api = {
       0
     );
     const tax = Math.round(subtotal * 0.08 * 100) / 100;
-    const shipping = subtotal > 100 ? 0 : 7.99;
+    const shipping = 0.00; // Instant digital download delivery
     const total = Math.round((subtotal + tax + shipping) * 100) / 100;
 
     const orderItems: OrderItem[] = input.items.map((i) => ({
@@ -180,6 +265,15 @@ export const api = {
       year: 'numeric',
     });
 
+    const randHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const generatedLicense =
+      input.licenseKey || `AA21PA-${dateStr.slice(-4)}-${randHex}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const totalItemCount = input.items.reduce((acc, i) => acc + i.quantity, 0);
+    const generatedRewardCoupon =
+      input.rewardCouponCode ||
+      (totalItemCount >= 2 ? `NEXTFREE-${randHex}` : undefined);
+
     const newOrder: Order = {
       id: `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
       date: dateStr,
@@ -188,8 +282,11 @@ export const api = {
       tax,
       shipping,
       total,
-      status: 'Processing',
-      shippingAddress: input.shippingAddress || 'Default Shipping Address',
+      status: 'Completed',
+      shippingAddress: input.shippingAddress || (input.customerEmail ? `Instant delivery to ${input.customerEmail}` : 'Instant Digital Delivery'),
+      customerEmail: input.customerEmail || 'aa21pa-solutions@gmail.com',
+      licenseKey: generatedLicense,
+      rewardCouponCode: generatedRewardCoupon,
     };
 
     inMemoryOrders.unshift(newOrder);

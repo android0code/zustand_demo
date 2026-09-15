@@ -20,6 +20,7 @@ import { ThemedInput } from '@/components/ui/themed-input';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GlassView } from 'expo-glass-effect';
 import { GradientView } from '@/components/ui/gradient-view';
+import { WebFooter } from '@/components/ui/web-footer';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useTheme } from '@/hooks/use-theme';
@@ -858,15 +859,8 @@ export default function ProfileScreen() {
               </GlassView>
             </Pressable>
 
-            {/* App Footer */}
-            <View style={styles.appFooter}>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.appFooterText}>
-                HappyExpo v1.0.0 • E-Commerce Suite
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11, marginTop: 2 }}>
-                Aurora Glassmorphism Design System
-              </ThemedText>
-            </View>
+            {/* Responsive Web Footer */}
+            <WebFooter />
           </View>
         </ScrollView>
       </SafeAreaView>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -9,13 +9,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { Image } from 'expo-image';
 import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
+
+const productThumbnails: Record<string, any> = {
+  'prod-ebook-1': require('@/assets/30Days_Hustle.png'),
+};
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedButton } from '@/components/ui/themed-button';
 import { GradientView } from '@/components/ui/gradient-view';
+import { WebFooter } from '@/components/ui/web-footer';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -32,8 +38,12 @@ export default function OrdersScreen() {
   const orders = useOrderStore((state) => state.orders);
   const isLoading = useOrderStore((state) => state.isLoading);
   const fetchOrders = useOrderStore((state) => state.fetchOrders);
-
+  const downloadOrderItem = useOrderStore((state) => state.downloadOrderItem);
   const addToCart = useCartStore((state) => state.addToCart);
+
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [downloadingItemId, setDownloadingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -41,128 +51,115 @@ export default function OrdersScreen() {
 
   const getCategorySymbol = (catId: string): { ios: SFSymbol; android: AndroidSymbol } => {
     switch (catId) {
-      case 'electronics':
-        return { ios: 'laptopcomputer', android: 'laptop' };
-      case 'fashion':
-        return { ios: 'tshirt.fill', android: 'checkroom' };
-      case 'home':
-        return { ios: 'house.fill', android: 'home' };
-      case 'sports':
-        return { ios: 'figure.run', android: 'fitness_center' };
-      case 'books':
+      case 'ebooks':
         return { ios: 'book.fill', android: 'menu_book' };
+      case 'templates':
+        return { ios: 'square.stack.3d.up.fill', android: 'layers' };
+      case 'uikits':
+        return { ios: 'paintpalette.fill', android: 'palette' };
+      case 'tools':
+        return { ios: 'wrench.and.screwdriver.fill', android: 'build' };
       default:
-        return { ios: 'tag.fill', android: 'sell' };
+        return { ios: 'sparkles', android: 'auto_awesome' };
     }
   };
 
-  const getStatusConfig = (status: OrderStatus) => {
-    switch (status) {
-      case 'Processing':
-        return {
-          bg: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(245, 158, 11, 0.12)',
-          border: 'rgba(245, 158, 11, 0.35)',
-          color: '#f59e0b',
-          icon: { ios: 'clock.fill' as const, android: 'schedule' as const },
-          label: 'Processing',
-        };
-      case 'Shipped':
-        return {
-          bg: isDark ? 'rgba(6, 182, 212, 0.18)' : 'rgba(6, 182, 212, 0.12)',
-          border: 'rgba(6, 182, 212, 0.35)',
-          color: '#06b6d4',
-          icon: { ios: 'shippingbox.fill' as const, android: 'local_shipping' as const },
-          label: 'Shipped',
-        };
-      case 'Delivered':
-        return {
-          bg: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.12)',
-          border: 'rgba(16, 185, 129, 0.35)',
-          color: '#10b981',
-          icon: { ios: 'checkmark.circle.fill' as const, android: 'check_circle' as const },
-          label: 'Delivered',
-        };
+  const handleCopyLicense = (key: string) => {
+    if (Platform.OS === 'web' && navigator?.clipboard) {
+      navigator.clipboard.writeText(key);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
     }
   };
 
-  const handleReorder = (orderItems: typeof orders[0]['items']) => {
-    orderItems.forEach((item) => {
-      for (let i = 0; i < item.quantity; i++) {
-        addToCart(item.product);
-      }
-    });
-    router.push('/cart');
+  const handleCopyCoupon = (code: string) => {
+    if (Platform.OS === 'web' && navigator?.clipboard) {
+      navigator.clipboard.writeText(code);
+      setCopiedCoupon(code);
+      setTimeout(() => setCopiedCoupon(null), 2000);
+    }
+  };
+
+  const handleDownloadItem = (orderId: string, productId: string) => {
+    setDownloadingItemId(productId);
+    downloadOrderItem(orderId, productId);
+    setTimeout(() => {
+      setDownloadingItemId(null);
+    }, 1200);
+  };
+
+  const handleDownloadAll = (orderId: string) => {
+    downloadOrderItem(orderId);
   };
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <ThemedText type="title" style={styles.headerTitle}>
-              Order History
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.headerSubtitle}>
-              Track deliveries & manage previous orders
-            </ThemedText>
-          </View>
-          <View style={styles.ordersBadge}>
-            <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
-              {orders.length} {orders.length === 1 ? 'order' : 'orders'}
-            </ThemedText>
-          </View>
-        </View>
-
-        {isLoading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
-              Loading your past orders...
-            </ThemedText>
-          </View>
-        ) : orders.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <View
-              style={[
-                styles.emptyIconCircle,
-                {
-                  backgroundColor: isDark ? '#141824' : '#ffffff',
-                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                },
-              ]}>
-              <GradientView
-                colors={['#6366f120', '#8b5cf610']}
-                direction="to-bottom-right"
-                style={styles.emptyIconInner}>
-                <SymbolView
-                  tintColor={theme.primary}
-                  name={{ ios: 'shippingbox.fill', android: 'inventory_2', web: 'inventory_2' }}
-                  size={48}
-                />
-              </GradientView>
+      <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <ThemedText type="title" style={styles.headerTitle}>
+                My Downloads & Licenses
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.headerSubtitle}>
+                Direct access to all purchased digital products and license keys
+              </ThemedText>
             </View>
-            <ThemedText type="subtitle" style={styles.emptyTitle}>
-              No Orders Placed Yet
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.emptySubtitle}>
-              When you purchase items from the catalog, their real-time delivery status and item receipt will appear here.
-            </ThemedText>
-            <ThemedButton
-              title="Start Shopping →"
-              variant="gradient"
-              gradientColors={Gradients.primary}
-              onPress={() => router.push('/')}
-              style={{ minWidth: 200 }}
-            />
+            <View style={styles.ordersBadge}>
+              <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
+                {orders.length} {orders.length === 1 ? 'purchase' : 'purchases'}
+              </ThemedText>
+            </View>
           </View>
-        ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}>
-            {orders.map((order) => {
-              const statusCfg = getStatusConfig(order.status);
 
+          {isLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
+                Loading purchased licenses...
+              </ThemedText>
+            </View>
+          ) : orders.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <View
+                style={[
+                  styles.emptyIconCircle,
+                  {
+                    backgroundColor: isDark ? '#141824' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                  },
+                ]}>
+                <GradientView
+                  colors={['#6366f120', '#8b5cf610']}
+                  direction="to-bottom-right"
+                  style={styles.emptyIconInner}>
+                  <SymbolView
+                    tintColor={theme.primary}
+                    name={{ ios: 'arrow.down.circle.fill', android: 'download', web: 'download' }}
+                    size={48}
+                  />
+                </GradientView>
+              </View>
+              <ThemedText type="subtitle" style={styles.emptyTitle}>
+                No Digital Purchases Yet
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.emptySubtitle}>
+                When you buy e-books, your instant PDF download files and license keys will appear here.
+              </ThemedText>
+              <ThemedButton
+                title="Explore E-Books Catalog →"
+                variant="gradient"
+                gradientColors={Gradients.primary}
+                onPress={() => router.push('/')}
+                style={{ minWidth: 200 }}
+              />
+            </View>
+          ) : (
+            <View style={styles.ordersListContainer}>
+              {orders.map((order) => {
               return (
                 <View
                   key={order.id}
@@ -175,7 +172,7 @@ export default function OrdersScreen() {
                         : 'rgba(0, 0, 0, 0.06)',
                     },
                   ]}>
-                  {/* Card Header: Receipt Icon, Order ID & Status Pill */}
+                  {/* Card Header: Order ID & Verified License Pill */}
                   <View style={styles.orderHeader}>
                     <View style={styles.orderIdGroup}>
                       <View
@@ -190,9 +187,9 @@ export default function OrdersScreen() {
                         <SymbolView
                           tintColor={theme.primary}
                           name={{
-                            ios: 'shippingbox.fill',
-                            android: 'inventory_2',
-                            web: 'inventory_2',
+                            ios: 'arrow.down.circle.fill',
+                            android: 'download_for_offline',
+                            web: 'download',
                           }}
                           size={18}
                         />
@@ -202,33 +199,127 @@ export default function OrdersScreen() {
                           Order #{order.id}
                         </ThemedText>
                         <ThemedText type="small" themeColor="textSecondary" style={styles.orderDate}>
-                          Placed on {order.date}
+                          Purchased on {order.date}
                         </ThemedText>
                       </View>
                     </View>
 
-                    <View
-                      style={[
-                        styles.statusPill,
-                        {
-                          backgroundColor: statusCfg.bg,
-                          borderColor: statusCfg.border,
-                        },
-                      ]}>
+                    <View style={styles.verifiedLicensePill}>
                       <SymbolView
-                        tintColor={statusCfg.color}
+                        tintColor="#10b981"
                         name={{
-                          ios: statusCfg.icon.ios,
-                          android: statusCfg.icon.android,
-                          web: statusCfg.icon.android,
+                          ios: 'checkmark.shield.fill',
+                          android: 'verified_user',
+                          web: 'verified',
                         }}
                         size={12}
                       />
-                      <ThemedText style={[styles.statusText, { color: statusCfg.color }]}>
-                        {statusCfg.label}
+                      <ThemedText style={styles.verifiedLicenseText}>
+                        VERIFIED LICENSE
                       </ThemedText>
                     </View>
                   </View>
+
+                  {/* Customer Email & License Key Box */}
+                  <View
+                    style={[
+                      styles.licenseBox,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(99, 102, 241, 0.08)'
+                          : 'rgba(99, 102, 241, 0.04)',
+                        borderColor: isDark
+                          ? 'rgba(99, 102, 241, 0.22)'
+                          : 'rgba(99, 102, 241, 0.15)',
+                      },
+                    ]}>
+                    <View style={styles.licenseRow}>
+                      <View style={{ flex: 1 }}>
+                        <ThemedText type="small" themeColor="textSecondary" style={styles.licenseLabel}>
+                          LICENSE KEY
+                        </ThemedText>
+                        <ThemedText style={[styles.licenseKeyText, { color: isDark ? '#a5b4fc' : '#4f46e5' }]}>
+                          {order.licenseKey || 'AA21PA-PRO-LIFETIME'}
+                        </ThemedText>
+                      </View>
+                      <Pressable
+                        onPress={() => handleCopyLicense(order.licenseKey || 'AA21PA-PRO-LIFETIME')}
+                        style={({ pressed }) => [
+                          styles.copyBtn,
+                          pressed && { opacity: 0.7 },
+                          copiedKey === (order.licenseKey || 'AA21PA-PRO-LIFETIME') && {
+                            backgroundColor: '#10b981',
+                          },
+                        ]}>
+                        <ThemedText style={styles.copyBtnText}>
+                          {copiedKey === (order.licenseKey || 'AA21PA-PRO-LIFETIME')
+                            ? 'COPIED!'
+                            : 'COPY KEY'}
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+
+                    {order.customerEmail && (
+                      <View style={styles.emailRow}>
+                        <SymbolView
+                          tintColor={theme.textSecondary}
+                          name={{ ios: 'envelope.fill', android: 'mail', web: 'mail' }}
+                          size={12}
+                        />
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Sent to: {order.customerEmail}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Free Product Voucher (Buy 2 Reward) */}
+                  {order.rewardCouponCode && (
+                    <View
+                      style={[
+                        styles.rewardCouponBox,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : 'rgba(16, 185, 129, 0.06)',
+                          borderColor: isDark
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(16, 185, 129, 0.2)',
+                        },
+                      ]}>
+                      <View style={styles.rewardHeaderRow}>
+                        <View style={styles.rewardBadgePill}>
+                          <SymbolView
+                            name={{ ios: 'gift.fill', android: 'card_giftcard', web: 'card_giftcard' }}
+                            tintColor="#10b981"
+                            size={12}
+                          />
+                          <ThemedText style={styles.rewardBadgeText}>
+                            FREE NEXT PRODUCT VOUCHER
+                          </ThemedText>
+                        </View>
+                        <Pressable
+                          onPress={() => handleCopyCoupon(order.rewardCouponCode!)}
+                          style={({ pressed }) => [
+                            styles.copyBtn,
+                            { backgroundColor: '#10b981' },
+                            pressed && { opacity: 0.7 },
+                          ]}>
+                          <ThemedText style={styles.copyBtnText}>
+                            {copiedCoupon === order.rewardCouponCode ? 'COPIED!' : 'COPY CODE'}
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+
+                      <ThemedText style={[styles.rewardCodeValue, { color: isDark ? '#34d399' : '#059669' }]}>
+                        {order.rewardCouponCode}
+                      </ThemedText>
+
+                      <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11.5 }}>
+                        Buy 2 Special Reward: Valid for 100% off any item on your next order. Dispatched to {order.customerEmail || 'your email'}.
+                      </ThemedText>
+                    </View>
+                  )}
 
                   <View
                     style={[
@@ -241,10 +332,11 @@ export default function OrdersScreen() {
                     ]}
                   />
 
-                  {/* Visual Items List (Product Mini-Cards) */}
+                  {/* Digital Items List with Direct Download Button */}
                   <View style={styles.itemsList}>
                     {order.items.map((item, idx) => {
                       const symbol = getCategorySymbol(item.product.categoryId);
+                      const isDownloading = downloadingItemId === item.product.id;
 
                       return (
                         <View
@@ -260,29 +352,35 @@ export default function OrdersScreen() {
                                 : 'rgba(0, 0, 0, 0.04)',
                             },
                           ]}>
-                          {/* Mini visual icon badge */}
-                          <View
-                            style={[
-                              styles.itemEmblem,
-                              {
-                                backgroundColor: isDark
-                                  ? `${item.product.colorAccent}25`
-                                  : `${item.product.colorAccent}15`,
-                                borderColor: `${item.product.colorAccent}35`,
-                              },
-                            ]}>
-                            <SymbolView
-                              tintColor={item.product.colorAccent}
-                              name={{
-                                ios: symbol.ios,
-                                android: symbol.android,
-                                web: symbol.android,
-                              }}
-                              size={18}
+                          {productThumbnails[item.product.id] ? (
+                            <Image
+                              source={productThumbnails[item.product.id]}
+                              contentFit="cover"
+                              style={styles.itemOrderThumbnail}
                             />
-                          </View>
+                          ) : (
+                            <View
+                              style={[
+                                styles.itemEmblem,
+                                {
+                                  backgroundColor: isDark
+                                    ? `${item.product.colorAccent}25`
+                                    : `${item.product.colorAccent}15`,
+                                  borderColor: `${item.product.colorAccent}35`,
+                                },
+                              ]}>
+                              <SymbolView
+                                tintColor={item.product.colorAccent}
+                                name={{
+                                  ios: symbol.ios,
+                                  android: symbol.android,
+                                  web: symbol.android,
+                                }}
+                                size={18}
+                              />
+                            </View>
+                          )}
 
-                          {/* Details */}
                           <View style={styles.itemDetails}>
                             <ThemedText
                               type="smallBold"
@@ -294,44 +392,33 @@ export default function OrdersScreen() {
                               type="small"
                               themeColor="textSecondary"
                               style={styles.itemMeta}>
-                              {item.product.brand} • Qty: {item.quantity}
+                              {item.product.fileFormat || 'Digital File'} • {item.product.fileSize || 'Instant'}
                             </ThemedText>
                           </View>
 
-                          {/* Price */}
-                          <ThemedText type="smallBold" style={styles.itemPrice}>
-                            ${((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}
-                          </ThemedText>
+                          {/* Direct Download Item Action */}
+                          <Pressable
+                            onPress={() => handleDownloadItem(order.id, item.product.id)}
+                            style={({ pressed }) => [
+                              styles.downloadItemBtn,
+                              pressed && { opacity: 0.8 },
+                            ]}>
+                            <SymbolView
+                              tintColor="#6366f1"
+                              name={{
+                                ios: 'arrow.down.to.line',
+                                android: 'download',
+                                web: 'download',
+                              }}
+                              size={14}
+                            />
+                            <ThemedText style={styles.downloadItemBtnText}>
+                              {isDownloading ? 'Saved!' : 'Download PDF'}
+                            </ThemedText>
+                          </Pressable>
                         </View>
                       );
                     })}
-                  </View>
-
-                  {/* Destination Address Pill */}
-                  <View
-                    style={[
-                      styles.destinationCard,
-                      {
-                        backgroundColor: isDark
-                          ? 'rgba(255, 255, 255, 0.04)'
-                          : 'rgba(0, 0, 0, 0.025)',
-                        borderColor: isDark
-                          ? 'rgba(255, 255, 255, 0.06)'
-                          : 'rgba(0, 0, 0, 0.04)',
-                      },
-                    ]}>
-                    <SymbolView
-                      tintColor={theme.primary}
-                      name={{ ios: 'location.fill', android: 'location_on', web: 'location_on' }}
-                      size={14}
-                    />
-                    <ThemedText
-                      type="small"
-                      themeColor="textSecondary"
-                      numberOfLines={1}
-                      style={styles.addressText}>
-                      Delivered to: {order.shippingAddress}
-                    </ThemedText>
                   </View>
 
                   <View
@@ -345,14 +432,14 @@ export default function OrdersScreen() {
                     ]}
                   />
 
-                  {/* Footer with Total and Prominent Reorder Button */}
+                  {/* Footer with Total and Download All Button */}
                   <View style={styles.orderFooter}>
                     <View>
                       <ThemedText
                         type="small"
                         themeColor="textSecondary"
                         style={styles.totalLabel}>
-                        Total ({order.items.length} {order.items.length === 1 ? 'item' : 'items'})
+                        Paid with Stripe
                       </ThemedText>
                       <ThemedText type="subtitle" style={styles.orderTotal}>
                         ${order.total.toFixed(2)}
@@ -360,38 +447,38 @@ export default function OrdersScreen() {
                     </View>
 
                     <Pressable
-                      onPress={() => handleReorder(order.items)}
+                      onPress={() => handleDownloadAll(order.id)}
                       style={({ pressed }) => [
-                        styles.reorderBtn,
+                        styles.downloadAllBtn,
                         {
-                          backgroundColor: theme.primary,
-                          shadowColor: theme.primary,
+                          backgroundColor: '#6366f1',
                         },
-                        pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                        pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
                       ]}>
-                      <GlassView
-                        glassEffectStyle="regular"
-                        colorScheme={isDark ? 'dark' : 'light'}
-                        style={StyleSheet.absoluteFill}
-                      />
                       <SymbolView
                         tintColor="#ffffff"
                         name={{
-                          ios: 'arrow.clockwise',
-                          android: 'refresh',
-                          web: 'refresh',
+                          ios: 'arrow.down.to.line.compact',
+                          android: 'download',
+                          web: 'download',
                         }}
-                        size={13}
+                        size={14}
                       />
-                      <ThemedText style={styles.reorderBtnText}>Reorder</ThemedText>
+                      <ThemedText style={styles.downloadAllBtnText}>
+                        Download All Files
+                      </ThemedText>
                     </Pressable>
                   </View>
                 </View>
               );
             })}
-          </ScrollView>
+          </View>
         )}
-      </SafeAreaView>
+
+        {/* Responsive Website Footer */}
+        <WebFooter />
+      </ScrollView>
+    </SafeAreaView>
     </ThemedView>
   );
 }
@@ -412,76 +499,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.three,
+    paddingBottom: Spacing.two,
   },
   headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '900',
+    fontSize: 24,
   },
   headerSubtitle: {
-    fontSize: 13,
     marginTop: 2,
+    fontSize: 13,
   },
   ordersBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingBottom: 130, // Safe margin for tab bar
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
   },
   loaderContainer: {
-    paddingVertical: Spacing.six,
+    paddingVertical: 60,
     alignItems: 'center',
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.five,
-    marginTop: 60,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: 60,
+    gap: 12,
   },
   emptyIconCircle: {
-    borderRadius: 50,
-    overflow: 'hidden',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 1,
-    marginBottom: Spacing.three,
+    overflow: 'hidden',
   },
   emptyIconInner: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    justifyContent: 'center',
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
-    marginBottom: Spacing.one,
   },
   emptySubtitle: {
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: Spacing.four,
-    maxWidth: 280,
+    maxWidth: 320,
+    lineHeight: 18,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: 60,
+  },
+  ordersListContainer: {
+    gap: Spacing.three,
   },
   orderCard: {
-    padding: Spacing.three + 2,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
-    marginBottom: Spacing.three + 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    padding: Spacing.three,
   },
   orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.two,
   },
   orderIdGroup: {
     flexDirection: 'row',
@@ -489,123 +570,192 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   orderIconSquare: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 10,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   orderId: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '700',
   },
   orderDate: {
-    fontSize: 12,
-    marginTop: 1,
+    fontSize: 11,
   },
-  statusPill: {
+  verifiedLicensePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  verifiedLicenseText: {
+    color: '#10b981',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  licenseBox: {
     borderRadius: 12,
     borderWidth: 1,
-    gap: 5,
+    padding: 10,
+    marginTop: 4,
+    marginBottom: 8,
+    gap: 6,
   },
-  statusText: {
-    fontSize: 11,
+  licenseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  licenseLabel: {
+    fontSize: 9,
     fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  licenseKeyText: {
+    fontSize: 13,
+    fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' }),
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  copyBtn: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  copyBtnText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rewardCouponBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 10,
+    marginTop: 4,
+    marginBottom: 8,
+    gap: 6,
+  },
+  rewardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rewardBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  rewardBadgeText: {
+    color: '#10b981',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  rewardCodeValue: {
+    fontSize: 14,
+    fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' }),
+    fontWeight: '900',
+    letterSpacing: 1.2,
   },
   divider: {
     height: 1,
-    marginVertical: Spacing.two + 2,
+    marginVertical: 6,
   },
   itemsList: {
     gap: 8,
+    marginVertical: 4,
   },
   itemRowCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 8,
     borderRadius: 12,
     borderWidth: 1,
     gap: 10,
   },
   itemEmblem: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  itemOrderThumbnail: {
+    width: 34,
+    height: 48,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   itemDetails: {
     flex: 1,
   },
   itemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
   },
   itemMeta: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
   },
-  itemPrice: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  destinationCard: {
+  downloadItemBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
     borderWidth: 1,
-    marginTop: 8,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
   },
-  addressText: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: '500',
+  downloadItemBtnText: {
+    color: '#6366f1',
+    fontSize: 11,
+    fontWeight: '700',
   },
   orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 2,
+    marginTop: 4,
   },
   totalLabel: {
-    fontSize: 11,
-    marginBottom: 2,
+    fontSize: 10,
+    fontWeight: '600',
   },
   orderTotal: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '800',
   },
-  reorderBtn: {
+  downloadAllBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.three + 2,
-    paddingVertical: 9,
-    borderRadius: 12,
-    gap: 5,
-    overflow: 'hidden',
-    position: 'relative',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 3,
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      } as any,
-    }),
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
-  reorderBtnText: {
+  downloadAllBtnText: {
     color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

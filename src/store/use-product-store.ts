@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api, type Category, type Product } from '@/services/api';
+import ecommerceData from '@/data/ecommerce-data.json';
 
 export type ProductSortOption = 'popular' | 'price-asc' | 'price-desc' | 'rating';
 
@@ -23,10 +24,24 @@ export interface ProductState {
   getFilteredProducts: () => Product[];
 }
 
+const initialCategories = (ecommerceData.categories as Category[]) || [];
+const initialProducts = (ecommerceData.products as Product[]) || [];
+const initialFeatured = initialProducts.filter(
+  (p) =>
+    p.badge &&
+    (p.badge.includes('OFF') ||
+      p.badge === 'TOP PICK' ||
+      p.badge === 'BESTSELLER' ||
+      p.badge === 'HOT TEMPLATE' ||
+      p.badge === 'STAFF PICK' ||
+      p.badge === 'TRENDING' ||
+      p.badge === 'EXPO SDK 57')
+);
+
 export const useProductStore = create<ProductState>((set, get) => ({
-  categories: [],
-  products: [],
-  featuredProducts: [],
+  categories: initialCategories,
+  products: initialProducts,
+  featuredProducts: initialFeatured,
   selectedCategory: null,
   selectedSubcategory: null,
   searchQuery: '',
@@ -87,16 +102,26 @@ export const useProductStore = create<ProductState>((set, get) => ({
     const { products, sortBy } = get();
     const sorted = [...products];
 
+    // Always sort live active products before coming soon products
+    const liveFirst = (a: any, b: any) => {
+      const aComing = a.status === 'coming_soon' || !a.inStock;
+      const bComing = b.status === 'coming_soon' || !b.inStock;
+      if (aComing !== bComing) {
+        return aComing ? 1 : -1;
+      }
+      return 0;
+    };
+
     switch (sortBy) {
       case 'price-asc':
-        return sorted.sort((a, b) => a.price - b.price);
+        return sorted.sort((a, b) => liveFirst(a, b) || a.price - b.price);
       case 'price-desc':
-        return sorted.sort((a, b) => b.price - a.price);
+        return sorted.sort((a, b) => liveFirst(a, b) || b.price - a.price);
       case 'rating':
-        return sorted.sort((a, b) => b.rating - a.rating);
+        return sorted.sort((a, b) => liveFirst(a, b) || b.rating - a.rating);
       case 'popular':
       default:
-        return sorted.sort((a, b) => b.reviewsCount - a.reviewsCount);
+        return sorted.sort((a, b) => liveFirst(a, b) || b.reviewsCount - a.reviewsCount);
     }
   },
 }));

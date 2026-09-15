@@ -27,14 +27,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={!user}>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>
-
-        <Stack.Protected guard={!!user}>
-          <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
-        </Stack.Protected>
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="(dashboard)">
+        <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

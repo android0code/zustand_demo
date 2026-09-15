@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,18 +20,22 @@ import { CategoryChip } from '@/components/ui/category-chip';
 import { ProductCard } from '@/components/ui/product-card';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientView } from '@/components/ui/gradient-view';
+import { StripeCheckoutModal } from '@/components/ui/stripe-checkout-modal';
+import { WebFooter } from '@/components/ui/web-footer';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useProductStore } from '@/store/use-product-store';
 import { useCartStore } from '@/store/use-cart-store';
+import type { Product } from '@/services/api';
 
 export default function ShopHomeScreen() {
   const router = useRouter();
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { width } = useWindowDimensions();
   const user = useAuthStore((state) => state.user);
 
   const categories = useProductStore((state) => state.categories);
@@ -48,6 +52,7 @@ export default function ShopHomeScreen() {
   const cartTotal = useCartStore((state) => state.getTotal());
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -66,54 +71,61 @@ export default function ShopHomeScreen() {
   const products = getFilteredProducts();
   const activeCategoryObj = categories.find((c) => c.id === selectedCategory);
 
+  // Responsive column calculation: 3 cards in line on web/desktop, 2 on tablet, 1 on mobile
+  const numColumns = width >= 960 ? 3 : width >= 640 ? 2 : 1;
+  const gridGap = width >= 960 ? 18 : width >= 640 ? 16 : 12;
+  const itemWidth = Platform.select({
+    web:
+      numColumns === 3
+        ? `calc((100% - ${gridGap * 2}px) / 3)`
+        : numColumns === 2
+        ? `calc((100% - ${gridGap}px) / 2)`
+        : '100%',
+    default: numColumns === 3 ? '31.5%' : numColumns === 2 ? '48%' : '100%',
+  });
+
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          {/* Header & User Greeting */}
-          <View style={styles.header}>
-            <View style={styles.headerTopRow}>
-              <View style={styles.headerTextContainer}>
-                <View style={styles.eyebrowBadge}>
-                  <ThemedText style={styles.greetingEyebrow}>
-                    AURORA COLLECTION
-                  </ThemedText>
-                </View>
-                <ThemedText type="title" style={styles.headerTitle}>
-                  Hello, {user?.name || 'Shopper'} 👋
+          {/* Web Digital Hero Banner */}
+          <View style={styles.heroSection}>
+            <View style={styles.heroBadgeRow}>
+              <View
+                style={[
+                  styles.heroBadge,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(99, 102, 241, 0.2)'
+                      : 'rgba(99, 102, 241, 0.12)',
+                    borderColor: isDark
+                      ? 'rgba(99, 102, 241, 0.4)'
+                      : 'rgba(99, 102, 241, 0.25)',
+                  },
+                ]}>
+                <SymbolView
+                  name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+                  tintColor="#6366f1"
+                  size={12}
+                />
+                <ThemedText style={styles.heroBadgeText}>
+                  INSTANT PDF DOWNLOADS • STRIPE CHECKOUT
                 </ThemedText>
               </View>
-
-              <Pressable
-                onPress={() => router.push('/profile')}
-                style={({ pressed }) => [
-                  styles.avatarPill,
-                  {
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
-                    borderColor: theme.glassBorder,
-                  },
-                  pressed && { opacity: 0.8 },
-                ]}>
-                <GlassView
-                  glassEffectStyle="regular"
-                  colorScheme={isDark ? 'dark' : 'light'}
-                  style={StyleSheet.absoluteFill}
-                />
-                <GradientView
-                  colors={Gradients.primary}
-                  direction="to-bottom-right"
-                  style={styles.avatarCircle}>
-                  <ThemedText style={styles.avatarInitial}>
-                    {(user?.name || 'U').charAt(0).toUpperCase()}
-                  </ThemedText>
-                </GradientView>
-              </Pressable>
             </View>
 
-            {/* Frosted Glass Search Bar */}
+            <ThemedText style={[styles.heroHeadline, { color: theme.text }]}>
+              Technical PDF E-Books & Guides
+            </ThemedText>
+
+            <ThemedText style={[styles.heroSubheadline, { color: theme.textSecondary }]}>
+              High-signal engineering and founder handbooks. Instant browser PDF download upon purchase.
+            </ThemedText>
+
+            {/* Quick Search Bar */}
             <View
               style={[
                 styles.searchBar,
@@ -128,7 +140,7 @@ export default function ShopHomeScreen() {
                 size={18}
               />
               <TextInput
-                placeholder="Search products, brands, specs..."
+                placeholder="Search e-books, authors..."
                 placeholderTextColor={theme.textSecondary}
                 value={localSearch}
                 onChangeText={setLocalSearch}
@@ -140,34 +152,58 @@ export default function ShopHomeScreen() {
                 <Pressable
                   onPress={handleClearSearch}
                   style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.6 }]}>
-                  <GlassView
-                    glassEffectStyle="regular"
-                    colorScheme={isDark ? 'dark' : 'light'}
-                    style={StyleSheet.absoluteFill}
-                  />
                   <ThemedText type="smallBold" themeColor="textSecondary">
                     ✕
                   </ThemedText>
                 </Pressable>
               ) : null}
             </View>
+
+            {/* Value Props Row */}
+            <View style={styles.valuePropsRow}>
+              <View style={styles.valuePropItem}>
+                <SymbolView
+                  name={{ ios: 'arrow.down.circle.fill', android: 'download', web: 'download' }}
+                  tintColor="#10b981"
+                  size={14}
+                />
+                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
+                  Instant Auto-Download
+                </ThemedText>
+              </View>
+              <View style={styles.valuePropItem}>
+                <SymbolView
+                  name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
+                  tintColor="#6366f1"
+                  size={14}
+                />
+                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
+                  Stripe 256-Bit SSL
+                </ThemedText>
+              </View>
+              <View style={styles.valuePropItem}>
+                <SymbolView
+                  name={{ ios: 'key.fill', android: 'vpn_key', web: 'vpn_key' }}
+                  tintColor="#f59e0b"
+                  size={14}
+                />
+                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
+                  Commercial License Key
+                </ThemedText>
+              </View>
+            </View>
           </View>
 
-          {/* Categories Selector */}
+          {/* Categories Horizontal Selector */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Categories
+                Browse by Category
               </ThemedText>
               {selectedCategory && (
                 <Pressable
                   onPress={() => setSelectedCategory(null)}
                   style={({ pressed }) => [styles.resetFilterPill, pressed && { opacity: 0.75 }]}>
-                  <GlassView
-                    glassEffectStyle="regular"
-                    colorScheme={isDark ? 'dark' : 'light'}
-                    style={StyleSheet.absoluteFill}
-                  />
                   <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
                     Clear Filter
                   </ThemedText>
@@ -180,7 +216,7 @@ export default function ShopHomeScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoryScroll}>
               <CategoryChip
-                title="All Products"
+                title="All Catalog"
                 icon="square.grid.2x2.fill"
                 androidIcon="category"
                 color={theme.primary}
@@ -194,6 +230,7 @@ export default function ShopHomeScreen() {
                   icon={cat.icon}
                   androidIcon={cat.androidIcon}
                   color={cat.color}
+                  badge={cat.status === 'coming_soon' ? 'SOON' : undefined}
                   isActive={selectedCategory === cat.id}
                   onPress={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
                 />
@@ -201,8 +238,8 @@ export default function ShopHomeScreen() {
             </ScrollView>
           </View>
 
-          {/* Subcategories Quick Jump (if a category is active) */}
-          {activeCategoryObj && (
+          {/* Subcategories Quick Jump (only for live categories with subcategories) */}
+          {activeCategoryObj && activeCategoryObj.status !== 'coming_soon' && activeCategoryObj.subcategories.length > 0 && (
             <View
               style={[
                 styles.subcatBanner,
@@ -263,11 +300,6 @@ export default function ShopHomeScreen() {
                       },
                       pressed && { opacity: 0.75 },
                     ]}>
-                    <GlassView
-                      glassEffectStyle="regular"
-                      colorScheme={isDark ? 'dark' : 'light'}
-                      style={StyleSheet.absoluteFill}
-                    />
                     <ThemedText
                       type="smallBold"
                       style={{ color: activeCategoryObj.color, fontSize: 12 }}>
@@ -279,7 +311,7 @@ export default function ShopHomeScreen() {
             </View>
           )}
 
-          {/* Featured Aurora Promo Card (when on all) */}
+          {/* Promo Card: Buy 2 Get Next Free Special */}
           {!selectedCategory && !searchQuery && (
             <Pressable
               onPress={() => {
@@ -292,29 +324,22 @@ export default function ShopHomeScreen() {
                 colors={['#6366f1', '#8b5cf6', '#06b6d4']}
                 direction="to-bottom-right"
                 style={styles.promoCard}>
-                {/* Decorative background glow circles */}
-                <View style={styles.decorCircle1} />
-                <View style={styles.decorCircle2} />
-
                 <View style={styles.promoContent}>
                   <View style={styles.promoTag}>
-                    <ThemedText style={styles.promoTagText}>✨ LIMITED OFFER</ThemedText>
+                    <ThemedText style={styles.promoTagText}>🎁 BUNDLE SPECIAL</ThemedText>
                   </View>
                   <ThemedText type="subtitle" style={styles.promoTitle}>
-                    Up to 50% Off Today
+                    Buy 2, Get Next Item Free
                   </ThemedText>
                   <ThemedText type="small" style={styles.promoSubtitle}>
-                    Use coupon code <ThemedText type="smallBold" style={styles.codeText}>AURORA50</ThemedText> at checkout
+                    No code needed at checkout! Buy any 2 items and receive a 100% FREE voucher code at your email for your next purchase.
                   </ThemedText>
-
-                  <View style={styles.promoCtaPill}>
-                    <ThemedText style={styles.promoCtaText}>Shop Deals →</ThemedText>
-                  </View>
                 </View>
 
                 <View style={styles.promoBadgeCircle}>
-                  <ThemedText style={styles.promoPercentText}>50%</ThemedText>
-                  <ThemedText style={styles.promoOffText}>OFF</ThemedText>
+                  <ThemedText style={styles.promoBadgeTop}>BUY 2</ThemedText>
+                  <ThemedText style={styles.promoBadgeMid}>NEXT</ThemedText>
+                  <ThemedText style={styles.promoBadgeSub}>100% FREE</ThemedText>
                 </View>
               </GradientView>
             </Pressable>
@@ -325,14 +350,18 @@ export default function ShopHomeScreen() {
             <View style={styles.sectionHeaderRow}>
               <ThemedText type="subtitle" style={styles.sectionTitle}>
                 {selectedCategory
-                  ? `${activeCategoryObj?.name || 'Category'} Items`
+                  ? activeCategoryObj?.status === 'coming_soon'
+                    ? `${activeCategoryObj.name} (Coming Soon)`
+                    : `${activeCategoryObj?.name || 'Category'} Collection`
                   : searchQuery
                   ? `Search: "${searchQuery}"`
-                  : 'Trending Products'}
+                  : 'Curated PDF E-Books'}
               </ThemedText>
               <View style={styles.itemsCountBadge}>
                 <ThemedText type="smallBold" style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  {products.length} {products.length === 1 ? 'item' : 'items'}
+                  {activeCategoryObj?.status === 'coming_soon'
+                    ? 'Coming Soon'
+                    : `${products.length} ${products.length === 1 ? 'e-book' : 'e-books'}`}
                 </ThemedText>
               </View>
             </View>
@@ -341,9 +370,67 @@ export default function ShopHomeScreen() {
               <View style={styles.loaderContainer}>
                 <ActivityIndicator size="large" color={theme.primary} />
                 <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
-                  Fetching curated items...
+                  Loading digital catalog...
                 </ThemedText>
               </View>
+            ) : activeCategoryObj?.status === 'coming_soon' ? (
+              <GlassCard style={styles.comingSoonCard}>
+                <View
+                  style={[
+                    styles.comingSoonEmblem,
+                    {
+                      backgroundColor: `${activeCategoryObj.color}1c`,
+                      borderColor: `${activeCategoryObj.color}40`,
+                    },
+                  ]}>
+                  <SymbolView
+                    name={{
+                      ios: activeCategoryObj.icon,
+                      android: activeCategoryObj.androidIcon,
+                      web: activeCategoryObj.androidIcon,
+                    }}
+                    tintColor={activeCategoryObj.color}
+                    size={38}
+                  />
+                </View>
+
+                <View
+                  style={[
+                    styles.comingSoonBadge,
+                    {
+                      backgroundColor: `${activeCategoryObj.color}15`,
+                      borderColor: `${activeCategoryObj.color}35`,
+                    },
+                  ]}>
+                  <ThemedText
+                    style={[styles.comingSoonBadgeText, { color: activeCategoryObj.color }]}>
+                    🚀 LAUNCHING SOON
+                  </ThemedText>
+                </View>
+
+                <ThemedText type="subtitle" style={styles.comingSoonTitle}>
+                  {activeCategoryObj.name} in Production
+                </ThemedText>
+
+                <ThemedText
+                  type="small"
+                  themeColor="textSecondary"
+                  style={styles.comingSoonSubtitle}>
+                  We are currently putting the finishing touches on our {activeCategoryObj.name.toLowerCase()}.
+                  Only our curated digital PDF E-Books & Guides are available for this launch.
+                </ThemedText>
+
+                <Pressable
+                  onPress={() => setSelectedCategory('ebooks')}
+                  style={({ pressed }) => [
+                    styles.browseEbooksBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}>
+                  <ThemedText style={styles.browseEbooksText}>
+                    Browse Live PDF E-Books →
+                  </ThemedText>
+                </Pressable>
+              </GlassCard>
             ) : products.length === 0 ? (
               <GlassCard style={styles.emptyCard}>
                 <SymbolView
@@ -352,10 +439,10 @@ export default function ShopHomeScreen() {
                   size={42}
                 />
                 <ThemedText type="subtitle" style={styles.emptyTitle}>
-                  No products found
+                  No e-books found
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.emptySubtitle}>
-                  Try clearing your search query or choosing another category.
+                  Try clearing your search query or switching categories.
                 </ThemedText>
                 <Pressable
                   onPress={() => {
@@ -363,30 +450,26 @@ export default function ShopHomeScreen() {
                     setSelectedCategory(null);
                   }}
                   style={({ pressed }) => [styles.clearFilterBtn, pressed && { opacity: 0.85 }]}>
-                  <GlassView
-                    glassEffectStyle="regular"
-                    colorScheme={isDark ? 'dark' : 'light'}
-                    style={styles.clearFilterBtnInner}>
-                    <GradientView
-                      colors={Gradients.primary}
-                      direction="to-right"
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <ThemedText style={styles.clearFilterText}>View All Products</ThemedText>
-                  </GlassView>
+                  <View style={styles.clearFilterBtnInner}>
+                    <ThemedText style={styles.clearFilterText}>View All E-Books</ThemedText>
+                  </View>
                 </Pressable>
               </GlassCard>
             ) : (
-              <View style={styles.productGrid}>
+              <View style={[styles.productGrid, { gap: gridGap }]}>
                 {products.map((product) => (
-                  <View key={product.id} style={styles.productGridItem}>
+                  <View
+                    key={product.id}
+                    style={[styles.productGridItem, { width: itemWidth as any }]}>
                     <ProductCard
                       product={product}
+                      onBuyNow={(prod) => {
+                        if (prod.status === 'coming_soon' || !prod.inStock) return;
+                        setCheckoutProduct(prod);
+                      }}
                       onPress={() => {
-                        router.push({
-                          pathname: '/product',
-                          params: { id: product.id },
-                        });
+                        if (product.status === 'coming_soon' || !product.inStock) return;
+                        setCheckoutProduct(product);
                       }}
                     />
                   </View>
@@ -394,9 +477,12 @@ export default function ShopHomeScreen() {
               </View>
             )}
           </View>
+
+          {/* Responsive Website Footer */}
+          <WebFooter />
         </ScrollView>
 
-        {/* Floating Frosted Glass Cart Dock (when items are in cart) */}
+        {/* Floating Quick Checkout Dock (only when cart has items) */}
         {totalCartItems > 0 && (
           <Pressable
             onPress={() => router.push('/cart')}
@@ -417,7 +503,7 @@ export default function ShopHomeScreen() {
                     {totalCartItems} {totalCartItems === 1 ? 'item' : 'items'} in Cart
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Tap to review & checkout
+                    Instant Digital Delivery
                   </ThemedText>
                 </View>
               </View>
@@ -426,22 +512,21 @@ export default function ShopHomeScreen() {
                 <ThemedText style={styles.floatingCartPrice}>
                   ${cartTotal.toFixed(2)}
                 </ThemedText>
-                <GlassView
-                  glassEffectStyle="regular"
-                  colorScheme={isDark ? 'dark' : 'light'}
-                  style={styles.cartCtaPill}>
-                  <GradientView
-                    colors={Gradients.primary}
-                    direction="to-right"
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <ThemedText style={styles.cartCtaText}>View Cart →</ThemedText>
-                </GlassView>
+                <View style={styles.cartCtaPill}>
+                  <ThemedText style={styles.cartCtaText}>Checkout →</ThemedText>
+                </View>
               </View>
             </GlassCard>
           </Pressable>
         )}
       </SafeAreaView>
+
+      {/* Stripe Checkout Modal for 1-Click Instant Buy */}
+      <StripeCheckoutModal
+        visible={!!checkoutProduct}
+        onClose={() => setCheckoutProduct(null)}
+        items={checkoutProduct ? [{ product: checkoutProduct, quantity: 1 }] : []}
+      />
     </ThemedView>
   );
 }
@@ -460,63 +545,42 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: 170, // Leaves space for floating cart dock & tab bar
+    paddingBottom: 80,
   },
-  header: {
+  heroSection: {
     marginBottom: Spacing.four,
   },
-  headerTopRow: {
+  heroBadgeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  heroBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.three,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
   },
-  headerTextContainer: {
-    flex: 1,
-  },
-  eyebrowBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
-    marginBottom: 4,
-  },
-  greetingEyebrow: {
+  heroBadgeText: {
     color: '#6366f1',
     fontWeight: '800',
     fontSize: 10,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
-  headerTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: '800',
+  heroHeadline: {
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '900',
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
-  avatarPill: {
-    padding: 3,
-    borderRadius: 24,
-    borderWidth: 1,
-    overflow: 'hidden',
-    position: 'relative',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-      } as any,
-    }),
-  },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitial: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 16,
+  heroSubheadline: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18,
+    maxWidth: 680,
   },
   searchBar: {
     flexDirection: 'row',
@@ -524,29 +588,38 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: Spacing.three,
-    height: 50,
+    height: 52,
     gap: Spacing.two,
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-      } as any,
-    }),
+    marginBottom: 14,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-  },
+    padding: 0,
+    outlineStyle: 'none',
+  } as any,
   clearBtn: {
     padding: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
     width: 24,
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  valuePropsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginTop: 4,
+  },
+  valuePropItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  valuePropText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   section: {
     marginBottom: Spacing.four,
@@ -555,40 +628,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.two + 4,
+    marginBottom: Spacing.three,
   },
   sectionTitle: {
-    fontSize: 22,
     fontWeight: '800',
+    fontSize: 19,
     letterSpacing: -0.3,
   },
   resetFilterPill: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
-    overflow: 'hidden',
-    position: 'relative',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      } as any,
-    }),
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
   },
   categoryScroll: {
-    paddingVertical: 4,
-    paddingRight: Spacing.three,
+    gap: Spacing.two,
+    paddingRight: Spacing.four,
   },
   subcatBanner: {
-    padding: Spacing.three + 2,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: Spacing.three,
     marginBottom: Spacing.four,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
   },
   subcatHeader: {
     flexDirection: 'row',
@@ -602,75 +663,40 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   subcatDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   subcatChipsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.two,
+    gap: 8,
   },
   subcatPill: {
-    paddingHorizontal: Spacing.two + 4,
-    paddingVertical: 7,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
-    overflow: 'hidden',
-    position: 'relative',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      } as any,
-    }),
   },
   promoWrapper: {
-    borderRadius: 24,
-    overflow: 'hidden',
     marginBottom: Spacing.four,
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 6,
   },
   promoCard: {
+    borderRadius: 20,
     padding: Spacing.four,
-    borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    position: 'relative',
     overflow: 'hidden',
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    top: -60,
-    right: -20,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(6, 182, 212, 0.25)',
-    bottom: -40,
-    left: 40,
   },
   promoContent: {
     flex: 1,
-    zIndex: 1,
   },
   promoTag: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: 6,
     marginBottom: 6,
   },
@@ -678,139 +704,183 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   promoTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  promoSubtitle: {
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 12,
-    marginBottom: Spacing.two,
-  },
-  codeText: {
-    color: '#ffffff',
-    textDecorationLine: 'underline',
-  },
-  promoCtaPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  promoCtaText: {
-    color: '#6366f1',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  promoBadgeCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: Spacing.two,
-    zIndex: 1,
-  },
-  promoPercentText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '900',
+    marginBottom: 4,
   },
-  promoOffText: {
+  promoSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+  },
+  codeText: {
     color: '#ffffff',
-    fontSize: 11,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    letterSpacing: 0.8,
+  },
+  promoBadgeCircle: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    marginLeft: 12,
+    paddingVertical: 4,
+  },
+  promoBadgeTop: {
+    color: '#6366f1',
     fontWeight: '800',
+    fontSize: 9,
+    lineHeight: 11,
+    letterSpacing: 0.4,
+    textAlign: 'center',
+  },
+  promoBadgeMid: {
+    color: '#4338ca',
+    fontWeight: '900',
+    fontSize: 13,
+    lineHeight: 15,
+    textAlign: 'center',
+  },
+  promoBadgeSub: {
+    color: '#d97706',
+    fontWeight: '900',
+    fontSize: 8.5,
+    lineHeight: 10,
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   productsSection: {
     marginBottom: Spacing.four,
   },
   itemsCountBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 8,
   },
   loaderContainer: {
-    paddingVertical: Spacing.six,
+    paddingVertical: 40,
     alignItems: 'center',
   },
   emptyCard: {
-    padding: Spacing.five,
+    padding: Spacing.six,
     alignItems: 'center',
-    borderRadius: 24,
+    borderRadius: 20,
+    gap: 8,
+  },
+  comingSoonCard: {
+    padding: Spacing.six,
+    alignItems: 'center',
+    borderRadius: 22,
+    gap: 12,
     marginVertical: Spacing.two,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: Spacing.two,
+  comingSoonEmblem: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 4,
+  },
+  comingSoonBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  comingSoonBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  comingSoonTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  comingSoonSubtitle: {
+    textAlign: 'center',
+    maxWidth: 440,
+    lineHeight: 20,
+    fontSize: 14,
+  },
+  browseEbooksBtn: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  browseEbooksText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
   },
   emptySubtitle: {
     textAlign: 'center',
-    marginBottom: Spacing.four,
-    maxWidth: 260,
+    maxWidth: 320,
   },
   clearFilterBtn: {
-    borderRadius: 14,
-    overflow: 'hidden',
+    marginTop: 10,
   },
   clearFilterBtnInner: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: 12,
-    borderRadius: 14,
-    overflow: 'hidden',
-    position: 'relative',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-      } as any,
-    }),
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   clearFilterText: {
     color: '#ffffff',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.three,
   },
   productGridItem: {
-    width: Platform.select({
-      web: 'calc(50% - 8px)',
-      default: '47.5%',
-    }) as any,
-    minWidth: 155,
+    padding: 0,
   },
   floatingCartDock: {
     position: 'absolute',
-    bottom: Platform.select({ ios: 104, android: 92, default: 86 }),
-    left: 16,
-    right: 16,
-    zIndex: 99,
+    bottom: 20,
+    left: 20,
+    right: 20,
+    maxWidth: 540,
+    alignSelf: 'center',
+    zIndex: 90,
   },
   floatingCartInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three + 2,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 22,
+    borderRadius: 18,
   },
   floatingCartLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: 10,
   },
   cartBadgeDot: {
     width: 32,
@@ -822,38 +892,31 @@ const styles = StyleSheet.create({
   cartBadgeDotText: {
     color: '#ffffff',
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 13,
   },
   floatingCartTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   floatingCartRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: 12,
   },
   floatingCartPrice: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    color: '#10b981',
+    color: '#6366f1',
   },
   cartCtaPill: {
+    backgroundColor: '#6366f1',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      } as any,
-    }),
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   cartCtaText: {
     color: '#ffffff',
-    fontWeight: '700',
     fontSize: 12,
+    fontWeight: '700',
   },
 });

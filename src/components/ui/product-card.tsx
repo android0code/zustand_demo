@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
-import { GlassView } from 'expo-glass-effect';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { Product } from '@/services/api';
 import { useCartStore } from '@/store/use-cart-store';
 
+const productCovers: Record<string, any> = {
+  'prod-ebook-1': require('@/assets/30Days_Hustle.png'),
+};
+
 export interface ProductCardProps {
   product: Product;
   onPress?: () => void;
+  onBuyNow?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onPress }: ProductCardProps) {
+export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [isHovered, setIsHovered] = useState(false);
 
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -26,35 +31,72 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
 
   const getCategorySymbol = (catId: string): { ios: SFSymbol; android: AndroidSymbol } => {
     switch (catId) {
-      case 'electronics':
-        return { ios: 'laptopcomputer', android: 'laptop' };
-      case 'fashion':
-        return { ios: 'tshirt.fill', android: 'checkroom' };
-      case 'home':
-        return { ios: 'house.fill', android: 'home' };
-      case 'sports':
-        return { ios: 'figure.run', android: 'fitness_center' };
-      case 'books':
+      case 'ebooks':
         return { ios: 'book.fill', android: 'menu_book' };
+      case 'templates':
+        return { ios: 'square.stack.3d.up.fill', android: 'layers' };
+      case 'uikits':
+        return { ios: 'paintpalette.fill', android: 'palette' };
+      case 'tools':
+        return { ios: 'wrench.and.screwdriver.fill', android: 'build' };
       default:
-        return { ios: 'tag.fill', android: 'sell' };
+        return { ios: 'sparkles', android: 'auto_awesome' };
     }
   };
 
   const symbol = getCategorySymbol(product.categoryId);
+  const isComingSoon = product.status === 'coming_soon' || !product.inStock;
+  const coverImage = productCovers[product.id] || (product.image ? { uri: product.image } : null);
 
   return (
     <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
+      onPress={() => {
+        if (!isComingSoon && onPress) {
+          onPress();
+        }
+      }}
+      onHoverIn={() => {
+        if (!isComingSoon) setIsHovered(true);
+      }}
+      onHoverOut={() => {
+        if (!isComingSoon) setIsHovered(false);
+      }}
+      style={({ pressed }) => [
+        styles.wrapper,
+        pressed && !isComingSoon && styles.pressed,
+        Platform.select({
+          web: {
+            cursor: isComingSoon ? 'default' : 'pointer',
+            transform: !isComingSoon && isHovered ? [{ translateY: -4 }] : [{ translateY: 0 }],
+            transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          } as any,
+        }),
+      ]}>
       <View
         style={[
           styles.card,
           {
             backgroundColor: isDark ? '#141824' : '#ffffff',
-            borderColor: isDark ? `${product.colorAccent}30` : `${product.colorAccent}22`,
+            borderColor: isHovered && !isComingSoon
+              ? `${product.colorAccent}60`
+              : isDark
+              ? `${product.colorAccent}30`
+              : `${product.colorAccent}25`,
             shadowColor: isDark ? '#000000' : product.colorAccent,
+            opacity: isComingSoon ? 0.92 : 1,
           },
+          Platform.select({
+            web: {
+              boxShadow: isHovered && !isComingSoon
+                ? isDark
+                  ? `0 16px 36px rgba(0, 0, 0, 0.5), 0 0 24px ${product.colorAccent}30`
+                  : `0 16px 36px ${product.colorAccent}25, 0 4px 12px rgba(0, 0, 0, 0.05)`
+                : isDark
+                ? '0 4px 16px rgba(0, 0, 0, 0.35)'
+                : `0 4px 16px ${product.colorAccent}15, 0 1px 3px rgba(0, 0, 0, 0.04)`,
+              transition: 'border-color 0.22s ease, box-shadow 0.22s ease',
+            } as any,
+          }),
         ]}>
         {/* Inset Rounded Showcase Hero Canvas */}
         <View
@@ -65,27 +107,33 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                 ? `${product.colorAccent}18`
                 : `${product.colorAccent}0e`,
               borderColor: isDark
-                ? `${product.colorAccent}25`
+                ? `${product.colorAccent}28`
                 : `${product.colorAccent}18`,
             },
           ]}>
-          {/* Top Row: Brand tag & Discount Badge */}
+          {/* Top Row: Author/Brand & Badge Tag */}
           <View style={styles.heroTopRow}>
             <View
               style={[
                 styles.brandPill,
                 {
                   backgroundColor: isDark
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : 'rgba(255, 255, 255, 0.85)',
+                    ? 'rgba(20, 24, 36, 0.85)'
+                    : 'rgba(255, 255, 255, 0.92)',
                   borderColor: isDark
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : 'rgba(0, 0, 0, 0.05)',
+                    ? `${product.colorAccent}40`
+                    : `${product.colorAccent}30`,
                 },
               ]}>
+              <SymbolView
+                name={{ ios: 'person.fill', android: 'person', web: 'person' }}
+                tintColor={product.colorAccent}
+                size={10}
+              />
               <ThemedText
+                numberOfLines={1}
                 style={[styles.brandText, { color: product.colorAccent }]}>
-                {product.brand.toUpperCase()}
+                {product.brand}
               </ThemedText>
             </View>
 
@@ -94,8 +142,8 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
                 style={[
                   styles.badgeContainer,
                   {
-                    backgroundColor: product.colorAccent,
-                    shadowColor: product.colorAccent,
+                    backgroundColor: isComingSoon ? '#8b5cf6' : product.colorAccent,
+                    shadowColor: isComingSoon ? '#8b5cf6' : product.colorAccent,
                   },
                 ]}>
                 <ThemedText style={styles.badgeText}>{product.badge}</ThemedText>
@@ -103,180 +151,254 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
             ) : null}
           </View>
 
-          {/* Center Glowing Icon Emblem */}
-          <View style={styles.emblemWrapper}>
-            <View
-              style={[
-                styles.iconEmblem,
-                {
-                  backgroundColor: isDark
-                    ? `${product.colorAccent}25`
-                    : '#ffffff',
-                  borderColor: `${product.colorAccent}35`,
-                },
-              ]}>
-              <SymbolView
-                tintColor={product.colorAccent}
-                name={{ ios: symbol.ios, android: symbol.android, web: symbol.android }}
-                size={26}
+          {/* Center: Book Cover Image or Glowing Icon Emblem */}
+          {coverImage ? (
+            <View style={styles.coverImageWrapper}>
+              <Image
+                source={coverImage}
+                contentFit="contain"
+                transition={200}
+                style={[
+                  styles.coverImage,
+                  Platform.select({
+                    web: {
+                      boxShadow: isDark
+                        ? '0 14px 28px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4)'
+                        : '0 14px 28px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08)',
+                    } as any,
+                  }),
+                ]}
               />
             </View>
-          </View>
+          ) : (
+            <View style={styles.emblemWrapper}>
+              <View
+                style={[
+                  styles.iconEmblem,
+                  {
+                    backgroundColor: isDark ? '#141824' : '#ffffff',
+                    borderColor: `${product.colorAccent}45`,
+                    shadowColor: product.colorAccent,
+                  },
+                ]}>
+                <SymbolView
+                  tintColor={product.colorAccent}
+                  name={{ ios: symbol.ios, android: symbol.android, web: symbol.android }}
+                  size={32}
+                />
+              </View>
+              <ThemedText style={[styles.emblemNotice, { color: theme.textSecondary }]}>
+                {product.brand}
+              </ThemedText>
+            </View>
+          )}
         </View>
 
         {/* Product Details Section */}
         <View style={styles.contentSection}>
-          <ThemedText type="smallBold" numberOfLines={2} style={styles.productName}>
-            {product.name}
-          </ThemedText>
+          <View style={styles.contentTop}>
+            {/* Product Title */}
+            <ThemedText type="smallBold" numberOfLines={2} style={styles.productName}>
+              {product.name}
+            </ThemedText>
 
-          {/* Spec Tags - Coordinated with Category Tint */}
-          <View style={styles.specsRow}>
-            {product.specs.slice(0, 2).map((spec, index) => (
+            {/* Product Short Description */}
+            {product.description ? (
+              <ThemedText
+                type="small"
+                themeColor="textSecondary"
+                numberOfLines={2}
+                style={styles.productDescription}>
+                {product.description}
+              </ThemedText>
+            ) : null}
+
+            {/* Bonus Highlight Box */}
+            {product.bonus ? (
               <View
-                key={index}
                 style={[
-                  styles.specChip,
+                  styles.bonusBox,
                   {
                     backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.06)'
-                      : `${product.colorAccent}0a`,
+                      ? 'rgba(245, 158, 11, 0.12)'
+                      : 'rgba(245, 158, 11, 0.08)',
                     borderColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : `${product.colorAccent}20`,
+                      ? 'rgba(245, 158, 11, 0.28)'
+                      : 'rgba(245, 158, 11, 0.22)',
                   },
                 ]}>
                 <ThemedText
-                  type="small"
+                  type="smallBold"
+                  numberOfLines={2}
                   style={[
-                    styles.specText,
-                    {
-                      color: isDark ? theme.textSecondary : `${product.colorAccent}ee`,
-                    },
+                    styles.bonusText,
+                    { color: isDark ? '#fde68a' : '#b45309' },
                   ]}>
-                  {spec}
+                  {product.bonus}
                 </ThemedText>
               </View>
-            ))}
+            ) : null}
           </View>
 
-          {/* Rating & Stock Row */}
-          <View style={styles.metaRow}>
-            <View
-              style={[
-                styles.ratingPill,
-                {
-                  backgroundColor: isDark
-                    ? 'rgba(245, 158, 11, 0.15)'
-                    : 'rgba(245, 158, 11, 0.12)',
-                  borderColor: 'rgba(245, 158, 11, 0.3)',
-                },
-              ]}>
-              <ThemedText style={styles.starText}>★</ThemedText>
-              <ThemedText type="smallBold" style={styles.ratingNumber}>
-                {product.rating}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.reviewsCount}>
-                ({product.reviewsCount})
-              </ThemedText>
-            </View>
-
-            {product.inStock && (
-              <View style={styles.stockBadge}>
-                <View style={styles.stockDot} />
-                <ThemedText type="small" style={styles.stockText}>
-                  In Stock
-                </ThemedText>
-              </View>
-            )}
-          </View>
-
-          {/* Price & Add to Cart Row */}
-          <View style={styles.footerRow}>
-            <View style={styles.priceContainer}>
-              <ThemedText type="subtitle" style={styles.currentPrice}>
-                ${product.price.toFixed(2)}
-              </ThemedText>
-              {product.originalPrice && (
-                <ThemedText
-                  type="small"
-                  themeColor="textSecondary"
-                  style={styles.originalPrice}>
-                  ${product.originalPrice.toFixed(2)}
-                </ThemedText>
-              )}
-            </View>
-
-            {/* Cart Button or Stepper */}
-            {quantity === 0 ? (
-              <Pressable
-                onPress={() => addToCart(product)}
-                style={({ pressed }) => [
-                  styles.addBtnOuter,
-                  isDark ? styles.addBtnOuterDark : styles.addBtnOuterLight,
-                  pressed && styles.buttonPressed,
-                ]}>
-                <GlassView
-                  glassEffectStyle="regular"
-                  colorScheme={isDark ? 'dark' : 'light'}
+          <View style={styles.contentBottom}>
+            {/* Meta & Price Row */}
+            <View style={styles.compactMetaRow}>
+              {isComingSoon ? (
+                <View
                   style={[
-                    styles.addBtnInner,
+                    styles.compactRating,
                     {
-                      backgroundColor: isDark
-                        ? `${product.colorAccent}25`
-                        : `${product.colorAccent}14`,
-                      borderColor: isDark ? `${product.colorAccent}40` : '#ffffff',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
                     },
                   ]}>
-                  <SymbolView
-                    tintColor={product.colorAccent}
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={12}
-                  />
-                  <ThemedText
-                    style={[styles.addButtonText, { color: product.colorAccent }]}>
-                    Add
+                  <ThemedText style={[styles.starText, { color: theme.textSecondary }]}>⏳</ThemedText>
+                  <ThemedText type="smallBold" style={[styles.ratingNumber, { color: theme.textSecondary }]}>
+                    Upcoming
                   </ThemedText>
-                </GlassView>
-              </Pressable>
-            ) : (
+                </View>
+              ) : (
+                <View style={styles.compactRating}>
+                  <ThemedText style={styles.starText}>★</ThemedText>
+                  <ThemedText type="smallBold" style={styles.ratingNumber}>
+                    {product.rating}
+                  </ThemedText>
+                </View>
+              )}
+
               <View
                 style={[
-                  styles.stepperContainer,
-                  isDark ? styles.stepperOuterDark : styles.stepperOuterLight,
+                  styles.compactFormatBadge,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(99, 102, 241, 0.16)'
+                      : 'rgba(99, 102, 241, 0.08)',
+                    borderColor: isDark
+                      ? 'rgba(99, 102, 241, 0.3)'
+                      : 'rgba(99, 102, 241, 0.2)',
+                  },
                 ]}>
-                <GlassView
-                  glassEffectStyle="regular"
-                  colorScheme={isDark ? 'dark' : 'light'}
-                  style={[
-                    styles.stepperInner,
-                    {
-                      backgroundColor: isDark
-                        ? `${product.colorAccent}20`
-                        : `${product.colorAccent}10`,
-                      borderColor: isDark ? `${product.colorAccent}40` : '#ffffff',
-                    },
-                  ]}>
-                  <Pressable
-                    onPress={() => updateQuantity(product.id, quantity - 1)}
-                    style={styles.stepperBtn}>
-                    <ThemedText type="smallBold" style={{ color: product.colorAccent }}>
-                      −
-                    </ThemedText>
-                  </Pressable>
-                  <ThemedText type="smallBold" style={[styles.stepperQuantity, { color: product.colorAccent }]}>
-                    {quantity}
-                  </ThemedText>
-                  <Pressable
-                    onPress={() => updateQuantity(product.id, quantity + 1)}
-                    style={styles.stepperBtn}>
-                    <ThemedText type="smallBold" style={{ color: product.colorAccent }}>
-                      +
-                    </ThemedText>
-                  </Pressable>
-                </GlassView>
+                <ThemedText style={[styles.compactFormatText, { color: isDark ? '#c7d2fe' : '#4338ca' }]}>
+                  PDF E-Book
+                </ThemedText>
               </View>
+
+              <View style={styles.priceContainer}>
+                <ThemedText type="subtitle" style={styles.currentPrice}>
+                  ${product.price.toFixed(2)}
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Actions Row */}
+            <View style={styles.clearActionsRow}>
+            {isComingSoon ? (
+              <View
+                style={[
+                  styles.comingSoonBtn,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.06)'
+                      : 'rgba(0, 0, 0, 0.04)',
+                    borderColor: isDark
+                      ? 'rgba(255, 255, 255, 0.14)'
+                      : 'rgba(0, 0, 0, 0.09)',
+                  },
+                ]}>
+                <SymbolView
+                  name={{ ios: 'clock.fill', android: 'schedule', web: 'schedule' }}
+                  tintColor={theme.textSecondary}
+                  size={14}
+                />
+                <ThemedText style={[styles.comingSoonText, { color: theme.textSecondary }]}>
+                  Coming Soon
+                </ThemedText>
+              </View>
+            ) : (
+              <>
+                {onBuyNow ? (
+                  <Pressable
+                    onPress={(e) => {
+                      e?.stopPropagation?.();
+                      onBuyNow(product);
+                    }}
+                    style={({ pressed }) => [
+                      styles.prominentBuyBtn,
+                      pressed && styles.buttonPressed,
+                    ]}>
+                    <SymbolView
+                      name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+                      tintColor="#ffffff"
+                      size={14}
+                    />
+                    <ThemedText style={styles.prominentBuyText}>Buy Now</ThemedText>
+                  </Pressable>
+                ) : null}
+
+                {/* Quick Cart Button or Stepper */}
+                {quantity === 0 ? (
+                  <Pressable
+                    onPress={(e) => {
+                      e?.stopPropagation?.();
+                      addToCart(product);
+                    }}
+                    style={({ pressed }) => [
+                      styles.quickCartBtn,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(0, 0, 0, 0.05)',
+                        borderColor: isDark
+                          ? 'rgba(255, 255, 255, 0.14)'
+                          : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      pressed && styles.buttonPressed,
+                    ]}>
+                    <SymbolView
+                      tintColor={theme.text}
+                      name={{ ios: 'cart.badge.plus', android: 'add_shopping_cart', web: 'add_shopping_cart' }}
+                      size={16}
+                    />
+                  </Pressable>
+                ) : (
+                  <View
+                    style={[
+                      styles.stepperContainer,
+                      {
+                        backgroundColor: isDark
+                          ? `${product.colorAccent}18`
+                          : `${product.colorAccent}10`,
+                        borderColor: `${product.colorAccent}40`,
+                      },
+                    ]}>
+                    <Pressable
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        updateQuantity(product.id, quantity - 1);
+                      }}
+                      style={styles.stepperBtn}>
+                      <ThemedText type="smallBold" style={{ color: product.colorAccent, fontSize: 13 }}>
+                        −
+                      </ThemedText>
+                    </Pressable>
+                    <ThemedText
+                      style={[styles.stepperQuantity, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                      {quantity}
+                    </ThemedText>
+                    <Pressable
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        updateQuantity(product.id, quantity + 1);
+                      }}
+                      style={styles.stepperBtn}>
+                      <ThemedText type="smallBold" style={{ color: product.colorAccent, fontSize: 13 }}>
+                        +
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                )}
+              </>
             )}
+          </View>
           </View>
         </View>
       </View>
@@ -286,55 +408,62 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 22,
-    overflow: 'hidden',
+    borderRadius: 20,
+    width: '100%',
+    flex: 1,
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 20,
     borderWidth: 1.5,
     overflow: 'hidden',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 14,
     elevation: 4,
-    ...Platform.select({
-      web: {
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-      } as any,
-    }),
+    flex: 1,
+    justifyContent: 'space-between',
   },
   pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.93,
+    transform: [{ scale: 0.985 }],
+    opacity: 0.95,
   },
   heroCanvas: {
     margin: 8,
     borderRadius: 16,
     borderWidth: 1,
-    padding: Spacing.two + 2,
-    minHeight: 110,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 240,
     justifyContent: 'space-between',
   },
   heroTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
+    width: '100%',
   },
   brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
+    maxWidth: '68%',
+    flexShrink: 1,
   },
   brandText: {
-    fontSize: 10,
-    letterSpacing: 0.8,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   badgeContainer: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 8,
+    flexShrink: 0,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -344,196 +473,170 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
+  },
+  coverImageWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    width: '100%',
+    flex: 1,
+  },
+  coverImage: {
+    width: 140,
+    height: 205,
+    borderRadius: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 5,
   },
   emblemWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    paddingVertical: 28,
+    flex: 1,
+    gap: 10,
+  },
+  emblemNotice: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   iconEmblem: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 3,
   },
   contentSection: {
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.three + 2,
-    paddingTop: 2,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 4,
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  contentTop: {
+    marginBottom: 8,
+  },
+  contentBottom: {
+    marginTop: 'auto',
   },
   productName: {
-    fontSize: 15,
+    fontSize: 14.5,
     lineHeight: 20,
     fontWeight: '700',
-    marginBottom: Spacing.one + 2,
     minHeight: 40,
+    marginBottom: 4,
   },
-  specsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.one,
-    marginBottom: Spacing.two,
-  },
-  specChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 7,
-    borderWidth: 1,
-  },
-  specText: {
+  productDescription: {
     fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '600',
+    lineHeight: 15,
+    marginBottom: 6,
   },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.two + 4,
-  },
-  ratingPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
+  bonusBox: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
+    marginBottom: 8,
+  },
+  bonusText: {
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  compactMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 10,
+  },
+  compactRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   starText: {
     color: '#f59e0b',
-    fontSize: 12,
+    fontSize: 13,
   },
   ratingNumber: {
     fontSize: 12,
     fontWeight: '800',
   },
-  reviewsCount: {
-    fontSize: 11,
-  },
-  stockBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  stockDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#10b981',
-  },
-  stockText: {
-    color: '#10b981',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 2,
-  },
-  priceContainer: {
-    flexDirection: 'column',
-  },
-  currentPrice: {
-    fontSize: 19,
-    lineHeight: 22,
-    fontWeight: '900',
-  },
-  originalPrice: {
-    fontSize: 12,
-    textDecorationLine: 'line-through',
-    marginTop: 1,
-  },
-  addBtnOuter: {
-    borderRadius: 20,
-    padding: 2,
+  compactFormatBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
     borderWidth: 1,
   },
-  addBtnOuterLight: {
-    backgroundColor: '#ffffff',
-    borderColor: 'rgba(0, 0, 0, 0.06)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(255, 255, 255, 0.9) inset',
-      } as any,
-    }),
+  compactFormatText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
-  addBtnOuterDark: {
-    backgroundColor: '#141926',
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.06) inset',
-      } as any,
-    }),
-  },
-  addBtnInner: {
+  priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    overflow: 'hidden',
   },
-  addButtonText: {
+  currentPrice: {
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  clearActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  prominentBuyBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#6366f1',
+    height: 38,
+    borderRadius: 8,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  prominentBuyText: {
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '800',
-    fontSize: 12,
+    letterSpacing: 0.4,
+  },
+  quickCartBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.96 }],
   },
   stepperContainer: {
-    borderRadius: 18,
-    padding: 2,
-    borderWidth: 1,
-  },
-  stepperOuterLight: {
-    backgroundColor: '#ffffff',
-    borderColor: 'rgba(0, 0, 0, 0.06)',
-  },
-  stepperOuterDark: {
-    backgroundColor: '#141926',
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  stepperInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1.5,
-    overflow: 'hidden',
     paddingHorizontal: 3,
-    height: 30,
+    height: 32,
   },
   stepperBtn: {
     paddingHorizontal: 8,
@@ -542,9 +645,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepperQuantity: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
-    minWidth: 18,
+    minWidth: 16,
     textAlign: 'center',
   },
+  comingSoonBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  comingSoonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
 });
+
