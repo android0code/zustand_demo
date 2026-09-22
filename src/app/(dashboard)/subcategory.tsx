@@ -23,7 +23,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useProductStore, type ProductSortOption } from '@/store/use-product-store';
 import { useCartStore } from '@/store/use-cart-store';
-import { StripeCheckoutModal } from '@/components/ui/stripe-checkout-modal';
+import { RazorpayCheckoutModal } from '@/components/ui/razorpay-checkout-modal';
 import { WebFooter } from '@/components/ui/web-footer';
 import type { Product } from '@/services/api';
 
@@ -488,8 +488,8 @@ export default function SubcategoryScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Stripe Digital Checkout Modal */}
-      <StripeCheckoutModal
+      {/* Razorpay Digital Checkout Modal */}
+      <RazorpayCheckoutModal
         visible={!!checkoutProduct}
         onClose={() => setCheckoutProduct(null)}
         items={checkoutProduct ? [{ product: checkoutProduct, quantity: 1 }] : []}

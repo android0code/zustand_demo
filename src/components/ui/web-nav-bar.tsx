@@ -33,17 +33,13 @@ export function WebNavBar() {
   const searchQuery = useProductStore((s) => s.searchQuery);
   const setSearchQuery = useProductStore((s) => s.setSearchQuery);
 
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-
   const categories = [
-    { id: null, label: 'All E-Books', isLive: true },
     { id: 'ebooks', label: 'E-Books', isLive: true },
     { id: 'templates', label: 'Templates', isComingSoon: true },
-    { id: 'uikits', label: 'UI Kits', isComingSoon: true },
-    { id: 'tools', label: 'Tools', isComingSoon: true },
+    { id: 'student-projects', label: 'Student Projects', isComingSoon: true },
   ];
 
-  const handleCategoryPress = (catId: string | null) => {
+  const handleCategoryPress = (catId: string) => {
     setSelectedCategory(catId);
     if (pathname !== '/' && pathname !== '/(dashboard)') {
       router.push('/(dashboard)');
@@ -51,7 +47,7 @@ export function WebNavBar() {
   };
 
   const handleLogoPress = () => {
-    setSelectedCategory(null);
+    setSelectedCategory('ebooks');
     setSearchQuery('');
     router.push('/(dashboard)');
   };
@@ -110,7 +106,7 @@ export function WebNavBar() {
               <View style={styles.navLinksRow}>
                 {categories.map((cat) => {
                   const isActive =
-                    (cat.id === null && selectedCategory === null) ||
+                    (cat.id === 'ebooks' && (selectedCategory === null || selectedCategory === 'ebooks')) ||
                     cat.id === selectedCategory;
                   return (
                     <Pressable
@@ -173,67 +169,8 @@ export function WebNavBar() {
             </nav>
           )}
 
-          {/* Search bar on Desktop / Large screens */}
-          {(isDesktop || (isTablet && isSearchExpanded)) && (
-            <View
-              style={[
-                styles.searchContainer,
-                {
-                  backgroundColor: isDark ? 'rgba(20, 25, 36, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(203, 213, 225, 0.7)',
-                },
-              ]}>
-              <SymbolView
-                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                tintColor={theme.textSecondary}
-                size={16}
-              />
-              <TextInput
-                value={searchQuery}
-                onChangeText={(t) => {
-                  setSearchQuery(t);
-                  if (pathname !== '/' && pathname !== '/(dashboard)') {
-                    router.push('/(dashboard)');
-                  }
-                }}
-                placeholder="Search e-books..."
-                placeholderTextColor={theme.textSecondary}
-                style={[styles.searchInput, { color: theme.text }]}
-              />
-              {searchQuery.length > 0 && (
-                <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                  <SymbolView
-                    name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
-                    tintColor={theme.textSecondary}
-                    size={16}
-                  />
-                </Pressable>
-              )}
-            </View>
-          )}
-
           {/* Right Action Icons & Badges */}
           <View style={styles.actionsRow}>
-            {/* Mobile Search Toggle */}
-            {!isDesktop && (
-              <Pressable
-                onPress={() => setIsSearchExpanded((prev) => !prev)}
-                style={({ pressed }) => [
-                  styles.iconButton,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.06)'
-                      : 'rgba(0, 0, 0, 0.04)',
-                  },
-                  pressed && styles.pressedOpacity,
-                ]}>
-                <SymbolView
-                  name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                  tintColor={theme.text}
-                  size={19}
-                />
-              </Pressable>
-            )}
 
             {/* My Downloads Button */}
             <Pressable
@@ -376,60 +313,6 @@ export function WebNavBar() {
             </Pressable>
           </View>
         </View>
-
-        {/* Expanded search for mobile/tablet */}
-        {!isDesktop && isSearchExpanded && (
-          <View
-            style={[
-              styles.mobileSearchRow,
-              {
-                borderTopColor: isDark
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(226, 232, 240, 0.8)',
-              },
-            ]}>
-            <View
-              style={[
-                styles.searchContainerMobile,
-                {
-                  backgroundColor: isDark
-                    ? 'rgba(20, 25, 36, 0.9)'
-                    : 'rgba(241, 245, 249, 0.9)',
-                  borderColor: isDark
-                    ? 'rgba(255, 255, 255, 0.12)'
-                    : 'rgba(203, 213, 225, 0.7)',
-                },
-              ]}>
-              <SymbolView
-                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                tintColor={theme.textSecondary}
-                size={16}
-              />
-              <TextInput
-                value={searchQuery}
-                onChangeText={(t) => {
-                  setSearchQuery(t);
-                  if (pathname !== '/' && pathname !== '/(dashboard)') {
-                    router.push('/(dashboard)');
-                  }
-                }}
-                placeholder="Search e-books, templates, tools..."
-                placeholderTextColor={theme.textSecondary}
-                autoFocus
-                style={[styles.searchInput, { color: theme.text }]}
-              />
-              {searchQuery.length > 0 && (
-                <Pressable onPress={() => setSearchQuery('')}>
-                  <SymbolView
-                    name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
-                    tintColor={theme.textSecondary}
-                    size={16}
-                  />
-                </Pressable>
-              )}
-            </View>
-          </View>
-        )}
       </View>
     </header>
   );

@@ -31,7 +31,7 @@ interface TabConfig {
 const TABS: TabConfig[] = [
   { id: 'return', title: 'Return Policy', icon: 'arrow.uturn.backward.circle.fill', badge: 'Digital Deliveries' },
   { id: 'refund', title: 'Refund Policy', icon: 'dollarsign.circle.fill', badge: '14-Day Guarantee' },
-  { id: 'privacy', title: 'Privacy Policy', icon: 'shield.lefthalf.filled', badge: 'GDPR & Stripe' },
+  { id: 'privacy', title: 'Privacy Policy', icon: 'shield.lefthalf.filled', badge: 'GDPR & Razorpay' },
   { id: 'disclaimer', title: 'Disclaimer', icon: 'exclamationmark.triangle.fill', badge: 'Legal & IP' },
 ];
 
@@ -98,7 +98,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
           This policy applies to all electronic books, architectural specifications, engineering handbooks, and tactical
-          guides purchased directly through the aa21pa-digits storefront. Upon successful checkout via Stripe, an
+          guides purchased directly through the aa21pa-digits storefront. Upon successful checkout via Razorpay, an
           automated download link and license authorization key are immediately generated.
         </ThemedText>
       </View>
@@ -153,7 +153,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
           Customer Satisfaction & Refund Policy
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.policyEffective}>
-          Effective Date: September 2026 • Stripe Verified Policy
+          Effective Date: September 2026 • Razorpay Verified Policy
         </ThemedText>
       </View>
 
@@ -236,7 +236,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
           <View style={styles.bulletItem}>
             <ThemedText style={styles.bulletDot}>1.</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.bulletText}>
-              Your Stripe payment email address.
+              Your Razorpay payment email address.
             </ThemedText>
           </View>
           <View style={styles.bulletItem}>
@@ -259,7 +259,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
           4. Processing Timeline
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
-          Approved refunds are processed through Stripe directly back to your original payment card within 5 to 7 business
+          Approved refunds are processed through Razorpay directly back to your original payment method within 5 to 7 business
           days. Upon refund issuance, your license key will be invalidated.
         </ThemedText>
       </View>
@@ -321,10 +321,10 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
 
       <View style={styles.sectionBlock}>
         <ThemedText type="subtitle" style={styles.subheading}>
-          2. Payment Information Security (Stripe)
+          2. Payment Information Security (Razorpay)
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
-          All payment card processing is performed directly through Stripe, Inc. using 256-bit TLS encryption. aa21pa-digits
+          All payment card, UPI, and netbanking processing is performed directly through Razorpay Software Private Limited / Razorpay Inc. using 256-bit TLS encryption. aa21pa-digits
           servers never store or see your raw credit card numbers, CVV security codes, or banking PINs.
         </ThemedText>
       </View>
@@ -410,7 +410,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
           3. Third-Party Trademarks
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
-          Expo, React, React Native, Stripe, TypeScript, Node.js, and other referenced technologies are trademarks or
+          Expo, React, React Native, Razorpay, TypeScript, Node.js, and other referenced technologies are trademarks or
           registered trademarks of their respective holders. aa21pa-digits is an independent publisher and is not
           affiliated with or endorsed by these third-party organizations.
         </ThemedText>

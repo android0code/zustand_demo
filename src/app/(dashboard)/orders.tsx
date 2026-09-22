@@ -55,8 +55,10 @@ export default function OrdersScreen() {
         return { ios: 'book.fill', android: 'menu_book' };
       case 'templates':
         return { ios: 'square.stack.3d.up.fill', android: 'layers' };
+      case 'student-projects':
+      case 'projects':
       case 'uikits':
-        return { ios: 'paintpalette.fill', android: 'palette' };
+        return { ios: 'graduationcap.fill', android: 'school' };
       case 'tools':
         return { ios: 'wrench.and.screwdriver.fill', android: 'build' };
       default:
@@ -439,7 +441,7 @@ export default function OrdersScreen() {
                         type="small"
                         themeColor="textSecondary"
                         style={styles.totalLabel}>
-                        Paid with Stripe
+                        Paid with Razorpay
                       </ThemedText>
                       <ThemedText type="subtitle" style={styles.orderTotal}>
                         ${order.total.toFixed(2)}

@@ -20,7 +20,7 @@ import { CategoryChip } from '@/components/ui/category-chip';
 import { ProductCard } from '@/components/ui/product-card';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientView } from '@/components/ui/gradient-view';
-import { StripeCheckoutModal } from '@/components/ui/stripe-checkout-modal';
+import { RazorpayCheckoutModal } from '@/components/ui/razorpay-checkout-modal';
 import { WebFooter } from '@/components/ui/web-footer';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -51,22 +51,12 @@ export default function ShopHomeScreen() {
   const totalCartItems = useCartStore((state) => state.getTotalItems());
   const cartTotal = useCartStore((state) => state.getTotal());
 
-  const [localSearch, setLocalSearch] = useState(searchQuery);
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchCategories();
     fetchProducts();
   }, []);
-
-  const handleSearchSubmit = () => {
-    setSearchQuery(localSearch);
-  };
-
-  const handleClearSearch = () => {
-    setLocalSearch('');
-    setSearchQuery('');
-  };
 
   const products = getFilteredProducts();
   const activeCategoryObj = categories.find((c) => c.id === selectedCategory);
@@ -112,7 +102,7 @@ export default function ShopHomeScreen() {
                   size={12}
                 />
                 <ThemedText style={styles.heroBadgeText}>
-                  INSTANT PDF DOWNLOADS • STRIPE CHECKOUT
+                  DIGITAL PDF E-BOOKS
                 </ThemedText>
               </View>
             </View>
@@ -122,42 +112,8 @@ export default function ShopHomeScreen() {
             </ThemedText>
 
             <ThemedText style={[styles.heroSubheadline, { color: theme.textSecondary }]}>
-              High-signal engineering and founder handbooks. Instant browser PDF download upon purchase.
+              Instant digital PDF downloads with verified license keys.
             </ThemedText>
-
-            {/* Quick Search Bar */}
-            <View
-              style={[
-                styles.searchBar,
-                {
-                  backgroundColor: theme.inputBackground,
-                  borderColor: theme.inputBorder,
-                },
-              ]}>
-              <SymbolView
-                tintColor={theme.primary}
-                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                size={18}
-              />
-              <TextInput
-                placeholder="Search e-books, authors..."
-                placeholderTextColor={theme.textSecondary}
-                value={localSearch}
-                onChangeText={setLocalSearch}
-                onSubmitEditing={handleSearchSubmit}
-                returnKeyType="search"
-                style={[styles.searchInput, { color: theme.text }]}
-              />
-              {localSearch.length > 0 ? (
-                <Pressable
-                  onPress={handleClearSearch}
-                  style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.6 }]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    ✕
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-            </View>
 
             {/* Value Props Row */}
             <View style={styles.valuePropsRow}>
@@ -174,11 +130,11 @@ export default function ShopHomeScreen() {
               <View style={styles.valuePropItem}>
                 <SymbolView
                   name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
-                  tintColor="#6366f1"
+                  tintColor="#0284c7"
                   size={14}
                 />
                 <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
-                  Stripe 256-Bit SSL
+                  Razorpay 256-Bit SSL
                 </ThemedText>
               </View>
               <View style={styles.valuePropItem}>
@@ -194,131 +150,42 @@ export default function ShopHomeScreen() {
             </View>
           </View>
 
-          {/* Categories Horizontal Selector */}
+          {/* Categories Selector */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Browse by Category
+                Categories
               </ThemedText>
-              {selectedCategory && (
-                <Pressable
-                  onPress={() => setSelectedCategory(null)}
-                  style={({ pressed }) => [styles.resetFilterPill, pressed && { opacity: 0.75 }]}>
-                  <ThemedText type="smallBold" style={{ color: theme.primary, fontSize: 12 }}>
-                    Clear Filter
-                  </ThemedText>
-                </Pressable>
-              )}
             </View>
 
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoryScroll}>
-              <CategoryChip
-                title="All Catalog"
-                icon="square.grid.2x2.fill"
-                androidIcon="category"
-                color={theme.primary}
-                isActive={selectedCategory === null}
-                onPress={() => setSelectedCategory(null)}
-              />
-              {categories.map((cat) => (
-                <CategoryChip
-                  key={cat.id}
-                  title={cat.name}
-                  icon={cat.icon}
-                  androidIcon={cat.androidIcon}
-                  color={cat.color}
-                  badge={cat.status === 'coming_soon' ? 'SOON' : undefined}
-                  isActive={selectedCategory === cat.id}
-                  onPress={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                />
-              ))}
+              {categories.map((cat) => {
+                const isActive =
+                  (cat.id === 'ebooks' && (selectedCategory === null || selectedCategory === 'ebooks')) ||
+                  cat.id === selectedCategory;
+                return (
+                  <CategoryChip
+                    key={cat.id}
+                    title={cat.name}
+                    icon={cat.icon}
+                    androidIcon={cat.androidIcon}
+                    color={cat.color}
+                    badge={cat.status === 'coming_soon' ? 'SOON' : undefined}
+                    isActive={isActive}
+                    onPress={() => setSelectedCategory(cat.id)}
+                  />
+                );
+              })}
             </ScrollView>
           </View>
 
-          {/* Subcategories Quick Jump (only for live categories with subcategories) */}
-          {activeCategoryObj && activeCategoryObj.status !== 'coming_soon' && activeCategoryObj.subcategories.length > 0 && (
-            <View
-              style={[
-                styles.subcatBanner,
-                {
-                  backgroundColor: isDark ? '#141824' : '#ffffff',
-                  borderColor: isDark
-                    ? `${activeCategoryObj.color}35`
-                    : `${activeCategoryObj.color}25`,
-                  shadowColor: activeCategoryObj.color,
-                },
-              ]}>
-              <View style={styles.subcatHeader}>
-                <View style={styles.subcatTitleRow}>
-                  <View
-                    style={[
-                      styles.subcatDot,
-                      { backgroundColor: activeCategoryObj.color },
-                    ]}
-                  />
-                  <ThemedText
-                    type="smallBold"
-                    style={{ color: activeCategoryObj.color, letterSpacing: 0.6 }}>
-                    {activeCategoryObj.name.toUpperCase()}
-                  </ThemedText>
-                </View>
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: '/subcategory',
-                      params: { categoryId: activeCategoryObj.id },
-                    })
-                  }>
-                  <ThemedText
-                    type="smallBold"
-                    style={{ color: activeCategoryObj.color, fontSize: 13 }}>
-                    Explore All →
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              <View style={styles.subcatChipsGrid}>
-                {activeCategoryObj.subcategories.map((sub) => (
-                  <Pressable
-                    key={sub.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/subcategory',
-                        params: { categoryId: activeCategoryObj.id, subcategoryId: sub.id },
-                      })
-                    }
-                    style={({ pressed }) => [
-                      styles.subcatPill,
-                      {
-                        backgroundColor: isDark
-                          ? `${activeCategoryObj.color}1c`
-                          : `${activeCategoryObj.color}10`,
-                        borderColor: `${activeCategoryObj.color}30`,
-                      },
-                      pressed && { opacity: 0.75 },
-                    ]}>
-                    <ThemedText
-                      type="smallBold"
-                      style={{ color: activeCategoryObj.color, fontSize: 12 }}>
-                      {sub.name}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
-
           {/* Promo Card: Buy 2 Get Next Free Special */}
-          {!selectedCategory && !searchQuery && (
+          {(!selectedCategory || selectedCategory === 'ebooks') && (
             <Pressable
-              onPress={() => {
-                if (categories.length > 0) {
-                  setSelectedCategory(categories[0].id);
-                }
-              }}
+              onPress={() => setSelectedCategory('ebooks')}
               style={({ pressed }) => [styles.promoWrapper, pressed && { opacity: 0.95 }]}>
               <GradientView
                 colors={['#6366f1', '#8b5cf6', '#06b6d4']}
@@ -349,12 +216,8 @@ export default function ShopHomeScreen() {
           <View style={styles.productsSection}>
             <View style={styles.sectionHeaderRow}>
               <ThemedText type="subtitle" style={styles.sectionTitle}>
-                {selectedCategory
-                  ? activeCategoryObj?.status === 'coming_soon'
-                    ? `${activeCategoryObj.name} (Coming Soon)`
-                    : `${activeCategoryObj?.name || 'Category'} Collection`
-                  : searchQuery
-                  ? `Search: "${searchQuery}"`
+                {activeCategoryObj?.status === 'coming_soon'
+                  ? `${activeCategoryObj.name} (Coming Soon)`
                   : 'Curated PDF E-Books'}
               </ThemedText>
               <View style={styles.itemsCountBadge}>
@@ -446,8 +309,8 @@ export default function ShopHomeScreen() {
                 </ThemedText>
                 <Pressable
                   onPress={() => {
-                    handleClearSearch();
-                    setSelectedCategory(null);
+                    setSearchQuery('');
+                    setSelectedCategory('ebooks');
                   }}
                   style={({ pressed }) => [styles.clearFilterBtn, pressed && { opacity: 0.85 }]}>
                   <View style={styles.clearFilterBtnInner}>
@@ -521,8 +384,8 @@ export default function ShopHomeScreen() {
         )}
       </SafeAreaView>
 
-      {/* Stripe Checkout Modal for 1-Click Instant Buy */}
-      <StripeCheckoutModal
+      {/* Razorpay Checkout Modal for 1-Click Instant Buy */}
+      <RazorpayCheckoutModal
         visible={!!checkoutProduct}
         onClose={() => setCheckoutProduct(null)}
         items={checkoutProduct ? [{ product: checkoutProduct, quantity: 1 }] : []}

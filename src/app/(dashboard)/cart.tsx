@@ -24,7 +24,7 @@ import { ThemedButton } from '@/components/ui/themed-button';
 import { ThemedInput } from '@/components/ui/themed-input';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientView } from '@/components/ui/gradient-view';
-import { StripeCheckoutModal } from '@/components/ui/stripe-checkout-modal';
+import { RazorpayCheckoutModal } from '@/components/ui/razorpay-checkout-modal';
 import { WebFooter } from '@/components/ui/web-footer';
 import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -59,7 +59,7 @@ export default function CartScreen() {
 
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState<string | null>(null);
-  const [isStripeModalVisible, setIsStripeModalVisible] = useState(false);
+  const [isRazorpayModalVisible, setIsRazorpayModalVisible] = useState(false);
 
   const getCategorySymbol = (catId: string): { ios: SFSymbol; android: AndroidSymbol } => {
     switch (catId) {
@@ -67,8 +67,10 @@ export default function CartScreen() {
         return { ios: 'book.fill', android: 'menu_book' };
       case 'templates':
         return { ios: 'square.stack.3d.up.fill', android: 'layers' };
+      case 'student-projects':
+      case 'projects':
       case 'uikits':
-        return { ios: 'paintpalette.fill', android: 'palette' };
+        return { ios: 'graduationcap.fill', android: 'school' };
       case 'tools':
         return { ios: 'wrench.and.screwdriver.fill', android: 'build' };
       default:
@@ -370,7 +372,7 @@ export default function CartScreen() {
                     type="small"
                     themeColor="textSecondary"
                     style={styles.addressBody}>
-                    Your files will automatically download upon Stripe payment approval. License keys and invoices are immediately saved to your account.
+                    Your files will automatically download upon Razorpay payment approval. License keys and invoices are immediately saved to your account.
                   </ThemedText>
                 </View>
               </View>
@@ -557,10 +559,10 @@ export default function CartScreen() {
               )}
 
               <ThemedButton
-                title={`⚡ Pay with Stripe • $${total.toFixed(2)}`}
+                title={`⚡ Pay with Razorpay • $${total.toFixed(2)}`}
                 variant="gradient"
                 gradientColors={Gradients.primary}
-                onPress={() => setIsStripeModalVisible(true)}
+                onPress={() => setIsRazorpayModalVisible(true)}
                 size="large"
                 style={styles.checkoutBtn}
               />
@@ -572,7 +574,7 @@ export default function CartScreen() {
                   size={12}
                 />
                 <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
-                  Protected by Stripe 256-Bit SSL • Instant File Delivery
+                  Protected by Razorpay 256-Bit SSL • Instant File Delivery
                 </ThemedText>
               </View>
             </View>
@@ -584,13 +586,13 @@ export default function CartScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Stripe Digital Checkout Modal */}
-      <StripeCheckoutModal
-        visible={isStripeModalVisible}
-        onClose={() => setIsStripeModalVisible(false)}
+      {/* Razorpay Digital Checkout Modal */}
+      <RazorpayCheckoutModal
+        visible={isRazorpayModalVisible}
+        onClose={() => setIsRazorpayModalVisible(false)}
         items={items}
         onSuccess={() => {
-          setIsStripeModalVisible(false);
+          setIsRazorpayModalVisible(false);
           router.push('/orders');
         }}
       />

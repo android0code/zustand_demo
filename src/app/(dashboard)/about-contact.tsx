@@ -30,7 +30,7 @@ const FAQS: FaqItem[] = [
   {
     question: 'How do I receive my purchased e-book?',
     answer:
-      'Immediately upon successful Stripe checkout, your browser will automatically start downloading the DRM-free PDF file. You will also receive an instant confirmation order record with your license key accessible under "My Downloads & Keys".',
+      'Immediately upon successful Razorpay checkout, your browser will automatically start downloading the DRM-free PDF file. You will also receive an instant confirmation order record with your license key accessible under "My Downloads & Keys".',
   },
   {
     question: 'What format are the digital publications delivered in?',
@@ -50,7 +50,7 @@ const FAQS: FaqItem[] = [
   {
     question: 'What is your refund policy for PDF e-books?',
     answer:
-      'We offer an unconditional 14-day quality guarantee. If the content does not meet your technical expectations or if you experience unresolvable file corruption, we issue a prompt 100% refund through Stripe.',
+      'We offer an unconditional 14-day quality guarantee. If the content does not meet your technical expectations or if you experience unresolvable file corruption, we issue a prompt 100% refund through Razorpay.',
   },
 ];
 
@@ -181,14 +181,14 @@ export default function AboutContactScreen() {
               </GlassCard>
 
               <GlassCard style={styles.statCard}>
-                <View style={[styles.statIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+                <View style={[styles.statIconBox, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
                   <SymbolView
                     name={{ ios: 'lock.shield.fill', android: 'security', web: 'security' }}
-                    tintColor="#f59e0b"
+                    tintColor="#0284c7"
                     size={20}
                   />
                 </View>
-                <ThemedText style={styles.statValue}>Stripe Verified</ThemedText>
+                <ThemedText style={styles.statValue}>Razorpay Verified</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.statLabel}>
                   Instant 14-Day Refund
                 </ThemedText>
@@ -469,7 +469,7 @@ export default function AboutContactScreen() {
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary" style={styles.aboutParagraph}>
                     Every e-book in our catalog is written by seasoned practitioners, delivered DRM-free with instant
-                    automated browser download upon Stripe checkout.
+                    automated browser download upon Razorpay checkout.
                   </ThemedText>
 
                   {/* Core Tenets */}
@@ -511,7 +511,7 @@ export default function AboutContactScreen() {
                         size={16}
                       />
                       <ThemedText type="small" style={styles.tenetText}>
-                        Stripe 14-Day Guarantee
+                        Razorpay 14-Day Guarantee
                       </ThemedText>
                     </View>
                   </View>

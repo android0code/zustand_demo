@@ -52,7 +52,7 @@ export function WebFooter() {
               </Pressable>
 
               <ThemedText type="small" themeColor="textSecondary" style={styles.brandDescription}>
-                Curated digital PDF guides and handbooks. Instant browser download with secure Stripe checkout.
+                Curated digital PDF guides and handbooks. Instant browser download with secure Razorpay checkout.
               </ThemedText>
 
               {/* Security & Quality Trust Badges */}
@@ -67,10 +67,10 @@ export function WebFooter() {
                   ]}>
                   <SymbolView
                     name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
-                    tintColor="#10b981"
+                    tintColor="#0284c7"
                     size={11}
                   />
-                  <ThemedText style={styles.trustBadgeText}>Stripe 256-Bit SSL</ThemedText>
+                  <ThemedText style={styles.trustBadgeText}>Razorpay 256-Bit SSL</ThemedText>
                 </View>
 
                 <View
@@ -194,7 +194,7 @@ export function WebFooter() {
             <View style={styles.bottomMetaRow}>
               <View style={styles.statusLiveDot} />
               <ThemedText type="small" themeColor="textSecondary" style={styles.bottomMetaText}>
-                Stripe Payments Live • DRM-Free PDF Edition
+                Razorpay Payments Live • DRM-Free PDF Edition
               </ThemedText>
             </View>
           </View>

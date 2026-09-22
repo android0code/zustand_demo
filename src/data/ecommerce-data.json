@@ -25,22 +25,12 @@
       "subcategories": []
     },
     {
-      "id": "uikits",
-      "name": "UI Kits & Assets",
-      "icon": "paintpalette.fill",
-      "androidIcon": "palette",
-      "color": "#ec4899",
-      "description": "Design systems, Figma component libraries, 3D icon packs, and landing assets",
-      "status": "coming_soon",
-      "subcategories": []
-    },
-    {
-      "id": "tools",
-      "name": "Tools & Presets",
-      "icon": "wrench.and.screwdriver.fill",
-      "androidIcon": "build",
-      "color": "#06b6d4",
-      "description": "Developer CLI suites, Notion productivity OS, audio packs, and shader presets",
+      "id": "student-projects",
+      "name": "Student Projects",
+      "icon": "graduationcap.fill",
+      "androidIcon": "school",
+      "color": "#10b981",
+      "description": "Academic capstone projects, final year source code, system documentation, and viva guides",
       "status": "coming_soon",
       "subcategories": []
     }
