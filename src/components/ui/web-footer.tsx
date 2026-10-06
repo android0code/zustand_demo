@@ -208,9 +208,15 @@ const styles = StyleSheet.create({
   outerContainer: {
     width: '100%',
     borderTopWidth: 1,
-    marginTop: Spacing.six,
-    paddingTop: Spacing.five,
-    paddingBottom: Spacing.five,
+    marginTop: Spacing.six + 16,
+    paddingTop: Spacing.five + 8,
+    paddingBottom: Spacing.five + 8,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   innerContainer: {
     maxWidth: MaxContentWidth,
@@ -250,17 +256,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   logoIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 3px 12px rgba(99, 102, 241, 0.35)',
+      } as any,
+    }),
   },
   brandTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   digitalPill: {
     backgroundColor: 'rgba(99, 102, 241, 0.18)',
@@ -278,8 +289,8 @@ const styles = StyleSheet.create({
   },
   brandDescription: {
     fontSize: 13,
-    lineHeight: 19,
-    marginBottom: 16,
+    lineHeight: 20,
+    marginBottom: 20,
   },
   trustBadgesRow: {
     flexDirection: 'row',
@@ -289,11 +300,16 @@ const styles = StyleSheet.create({
   trustBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+      } as any,
+    }),
   },
   trustBadgeText: {
     fontSize: 11,
@@ -301,8 +317,9 @@ const styles = StyleSheet.create({
   },
   colHeader: {
     fontSize: 12,
-    letterSpacing: 0.8,
-    marginBottom: 14,
+    letterSpacing: 1,
+    marginBottom: 16,
+    fontWeight: '800',
   },
   linksList: {
     gap: 10,
@@ -313,6 +330,12 @@ const styles = StyleSheet.create({
   footerLinkText: {
     fontSize: 13,
     fontWeight: '500',
+    ...Platform.select({
+      web: {
+        transition: 'color 0.15s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   supportContactPill: {
     flexDirection: 'row',
@@ -349,10 +372,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: '#10b981',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 8px rgba(16, 185, 129, 0.5)',
+        animationKeyframes: 'pulse',
+        animationDuration: '2s',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+      } as any,
+    }),
   },
   bottomMetaText: {
     fontSize: 11,

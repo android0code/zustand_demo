@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { WebNavBar } from '@/components/ui/web-nav-bar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AnimatedBackground } from '@/components/ui/animated-background';
 
 export default function DashboardLayout() {
   const colorScheme = useColorScheme();
@@ -11,6 +12,7 @@ export default function DashboardLayout() {
 
   return (
     <View style={[styles.root, { backgroundColor: isDark ? '#0a0d14' : '#f8fafc' }]}>
+      <AnimatedBackground />
       <Tabs
         screenOptions={{
           headerShown: true,
@@ -42,6 +44,13 @@ export default function DashboardLayout() {
           }}
         />
         {/* Hidden deep navigation screens */}
+        <Tabs.Screen
+          name="product-details"
+          options={{
+            href: null,
+            title: 'Product Details & Checkout',
+          }}
+        />
         <Tabs.Screen
           name="subcategory"
           options={{

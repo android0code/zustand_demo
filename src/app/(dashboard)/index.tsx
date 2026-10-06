@@ -81,73 +81,93 @@ export default function ShopHomeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          {/* Web Digital Hero Banner */}
+          {/* Hero Banner with Gradient Background */}
           <View style={styles.heroSection}>
-            <View style={styles.heroBadgeRow}>
-              <View
-                style={[
-                  styles.heroBadge,
+            <GradientView
+              colors={isDark ? ['#1a1040', '#0a0d14'] : ['#eef2ff', '#f8fafc']}
+              direction="to-bottom"
+              style={styles.heroBannerBg}>
+              {/* Decorative accent line */}
+              <View style={[styles.heroAccentLine, { backgroundColor: theme.primary }]} />
+              
+              <View style={styles.heroBadgeRow}>
+                <View
+                  style={[
+                    styles.heroBadge,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(99, 102, 241, 0.2)'
+                        : 'rgba(99, 102, 241, 0.12)',
+                      borderColor: isDark
+                        ? 'rgba(99, 102, 241, 0.4)'
+                        : 'rgba(99, 102, 241, 0.25)',
+                    },
+                  ]}>
+                  <SymbolView
+                    name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+                    tintColor="#6366f1"
+                    size={12}
+                  />
+                  <ThemedText style={styles.heroBadgeText}>
+                    DIGITAL PDF E-BOOKS
+                  </ThemedText>
+                </View>
+              </View>
+
+              <ThemedText style={[styles.heroHeadline, { color: theme.text }]}>
+                Premium Technical{`\n`}E-Books & Guides
+              </ThemedText>
+
+              <ThemedText style={[styles.heroSubheadline, { color: theme.textSecondary }]}>
+                Instant digital PDF downloads with verified license keys.{`\n`}Secure checkout powered by Razorpay.
+              </ThemedText>
+
+              {/* Value Props as Glass Cards */}
+              <View style={styles.valuePropsRow}>
+                {[
                   {
-                    backgroundColor: isDark
-                      ? 'rgba(99, 102, 241, 0.2)'
-                      : 'rgba(99, 102, 241, 0.12)',
-                    borderColor: isDark
-                      ? 'rgba(99, 102, 241, 0.4)'
-                      : 'rgba(99, 102, 241, 0.25)',
+                    icon: { ios: 'arrow.down.circle.fill' as const, android: 'download' as const },
+                    label: 'Instant Download',
+                    color: '#10b981',
                   },
-                ]}>
-                <SymbolView
-                  name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
-                  tintColor="#6366f1"
-                  size={12}
-                />
-                <ThemedText style={styles.heroBadgeText}>
-                  DIGITAL PDF E-BOOKS
-                </ThemedText>
+                  {
+                    icon: { ios: 'lock.fill' as const, android: 'lock' as const },
+                    label: '256-Bit SSL',
+                    color: '#0284c7',
+                  },
+                  {
+                    icon: { ios: 'key.fill' as const, android: 'vpn_key' as const },
+                    label: 'License Key',
+                    color: '#f59e0b',
+                  },
+                ].map((prop, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.valuePropCard,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(255, 255, 255, 0.04)'
+                          : 'rgba(255, 255, 255, 0.8)',
+                        borderColor: isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(0, 0, 0, 0.06)',
+                      },
+                    ]}>
+                    <View style={[styles.valuePropIconCircle, { backgroundColor: `${prop.color}18` }]}>
+                      <SymbolView
+                        name={{ ios: prop.icon.ios, android: prop.icon.android, web: prop.icon.android }}
+                        tintColor={prop.color}
+                        size={16}
+                      />
+                    </View>
+                    <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
+                      {prop.label}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            </View>
-
-            <ThemedText style={[styles.heroHeadline, { color: theme.text }]}>
-              Technical PDF E-Books & Guides
-            </ThemedText>
-
-            <ThemedText style={[styles.heroSubheadline, { color: theme.textSecondary }]}>
-              Instant digital PDF downloads with verified license keys.
-            </ThemedText>
-
-            {/* Value Props Row */}
-            <View style={styles.valuePropsRow}>
-              <View style={styles.valuePropItem}>
-                <SymbolView
-                  name={{ ios: 'arrow.down.circle.fill', android: 'download', web: 'download' }}
-                  tintColor="#10b981"
-                  size={14}
-                />
-                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
-                  Instant Auto-Download
-                </ThemedText>
-              </View>
-              <View style={styles.valuePropItem}>
-                <SymbolView
-                  name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
-                  tintColor="#0284c7"
-                  size={14}
-                />
-                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
-                  Razorpay 256-Bit SSL
-                </ThemedText>
-              </View>
-              <View style={styles.valuePropItem}>
-                <SymbolView
-                  name={{ ios: 'key.fill', android: 'vpn_key', web: 'vpn_key' }}
-                  tintColor="#f59e0b"
-                  size={14}
-                />
-                <ThemedText style={[styles.valuePropText, { color: theme.textSecondary }]}>
-                  Commercial License Key
-                </ThemedText>
-              </View>
-            </View>
+            </GradientView>
           </View>
 
           {/* Categories Selector */}
@@ -327,12 +347,16 @@ export default function ShopHomeScreen() {
                     <ProductCard
                       product={product}
                       onBuyNow={(prod) => {
-                        if (prod.status === 'coming_soon' || !prod.inStock) return;
-                        setCheckoutProduct(prod);
+                        router.push({
+                          pathname: '/(dashboard)/product-details',
+                          params: { id: prod.id },
+                        });
                       }}
                       onPress={() => {
-                        if (product.status === 'coming_soon' || !product.inStock) return;
-                        setCheckoutProduct(product);
+                        router.push({
+                          pathname: '/(dashboard)/product-details',
+                          params: { id: product.id },
+                        });
                       }}
                     />
                   </View>
@@ -411,7 +435,29 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   heroSection: {
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.five,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  heroBannerBg: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.five,
+    paddingBottom: Spacing.four,
+    borderRadius: 24,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      } as any,
+    }),
+  },
+  heroAccentLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   heroBadgeRow: {
     flexDirection: 'row',
@@ -433,17 +479,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   heroHeadline: {
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 38,
+    lineHeight: 46,
     fontWeight: '900',
-    marginBottom: 8,
-    letterSpacing: -0.5,
+    marginBottom: 12,
+    letterSpacing: -0.8,
   },
   heroSubheadline: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
-    maxWidth: 680,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+    maxWidth: 520,
   },
   searchBar: {
     flexDirection: 'row',
@@ -472,17 +518,34 @@ const styles = StyleSheet.create({
   valuePropsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 4,
+    gap: 10,
   },
-  valuePropItem: {
+  valuePropCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      } as any,
+    }),
+  },
+  valuePropIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   valuePropText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   section: {
     marginBottom: Spacing.four,
@@ -494,9 +557,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.three,
   },
   sectionTitle: {
-    fontWeight: '800',
-    fontSize: 19,
-    letterSpacing: -0.3,
+    fontWeight: '900',
+    fontSize: 22,
+    letterSpacing: -0.5,
   },
   resetFilterPill: {
     paddingHorizontal: 10,
@@ -542,15 +605,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   promoWrapper: {
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.five,
+    ...Platform.select({
+      web: {
+        transition: 'transform 0.2s ease',
+      } as any,
+    }),
   },
   promoCard: {
-    borderRadius: 20,
-    padding: Spacing.four,
+    borderRadius: 24,
+    padding: Spacing.four + 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1)',
+      } as any,
+    }),
   },
   promoContent: {
     flex: 1,
@@ -571,13 +644,15 @@ const styles = StyleSheet.create({
   },
   promoTitle: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '900',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   promoSubtitle: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255, 255, 255, 0.92)',
     fontSize: 13,
+    lineHeight: 19,
   },
   codeText: {
     color: '#ffffff',
@@ -588,18 +663,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   promoBadgeCircle: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    marginLeft: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    marginLeft: 16,
     paddingVertical: 4,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+      } as any,
+    }),
   },
   promoBadgeTop: {
     color: '#6366f1',
@@ -725,20 +805,30 @@ const styles = StyleSheet.create({
   },
   floatingCartDock: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    bottom: 24,
+    left: 24,
+    right: 24,
     maxWidth: 540,
     alignSelf: 'center',
     zIndex: 90,
+    ...Platform.select({
+      web: {
+        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+      } as any,
+    }),
   },
   floatingCartInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 20,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(99, 102, 241, 0.1)',
+      } as any,
+    }),
   },
   floatingCartLeft: {
     flexDirection: 'row',
@@ -773,9 +863,14 @@ const styles = StyleSheet.create({
   },
   cartCtaPill: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+      } as any,
+    }),
   },
   cartCtaText: {
     color: '#ffffff',

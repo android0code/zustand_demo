@@ -1,14 +1,13 @@
 /**
  * RAZORPAY PAYMENT CONFIGURATION
  * -------------------------------------------------------------
- * Easy configuration for your Razorpay Account.
+ * Configured with dual environment support:
+ * 1. Testing / Debug Details: Used during development, debugging, and local testing.
+ * 2. Live Production Details: Used for real payments in production.
  *
- * HOW TO GET YOUR KEYS:
- * 1. Log in to your Razorpay Dashboard: https://dashboard.razorpay.com/app/keys
- * 2. In the left sidebar, navigate to Account & Settings -> API Keys.
- * 3. Generate or copy your Key ID (and Key Secret if using server-side order creation).
- * 4. Paste your Key ID below in `keyId`.
- * 5. Set `isTestMode: false` when you are ready to accept real customer payments!
+ * HOW TO SWITCH:
+ * - In Development (__DEV__ = true): Test credentials are used automatically.
+ * - In Production: Set `EXPO_PUBLIC_IS_TEST_MODE=false` in .env to enable Live mode.
  */
 
 export interface RazorpayConfig {
@@ -57,29 +56,69 @@ export interface RazorpayConfig {
   supportEmail: string;
 
   /**
-   * Set to `true` during development/testing.
-   * Change to `false` when launching live to real customers.
+   * `true` during development/testing.
+   * `false` when accepting live payments from real customers.
    */
   isTestMode: boolean;
 }
 
+// -----------------------------------------------------------------------------
+// 1. TESTING CREDENTIALS (DEBUG MODE ONLY)
+// -----------------------------------------------------------------------------
+export const RAZORPAY_TEST_CREDENTIALS = {
+  keyId: process.env.EXPO_PUBLIC_RAZORPAY_TEST_KEY_ID || 'rzp_test_Tch2pFyFPMnE7Z',
+  keySecret:
+    process.env.RAZORPAY_TEST_KEY_SECRET ||
+    process.env.EXPO_PUBLIC_RAZORPAY_TEST_KEY_SECRET ||
+    'e3lE42kaMxUlxDkewr9qOzQG',
+};
+
+// -----------------------------------------------------------------------------
+// 2. LIVE CREDENTIALS (PRODUCTION REAL MONEY PAYMENTS)
+// -----------------------------------------------------------------------------
+export const RAZORPAY_LIVE_CREDENTIALS = {
+  keyId: process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_ID || 'rzp_live_TkXit42sKW1toa',
+  keySecret:
+    process.env.RAZORPAY_LIVE_KEY_SECRET ||
+    process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_SECRET ||
+    'D5DJYB0YlYgUFuCFCGGE02A7',
+};
+
+// -----------------------------------------------------------------------------
+// 3. SMART ACTIVE CONFIGURATION
+// -----------------------------------------------------------------------------
+// Development/Debug detection:
+const isDevEnvironment =
+  (typeof __DEV__ !== 'undefined' && __DEV__) ||
+  process.env.NODE_ENV !== 'production' ||
+  process.env.EXPO_PUBLIC_APP_ENV === 'development';
+
+// In development/debug, testing credentials are used for safe development.
+// Set EXPO_PUBLIC_IS_TEST_MODE='false' in production to activate live payments.
+export const isRazorpayTestMode: boolean =
+  process.env.EXPO_PUBLIC_IS_TEST_MODE !== 'false' || isDevEnvironment;
+
 export const RAZORPAY_CONFIG: RazorpayConfig = {
-  // ⬇️ REPLACE THIS WITH YOUR RAZORPAY KEY ID:
-  keyId: 'rzp_test_Tch2pFyFPMnE7Z',
+  // Key ID: switches between test and live based on environment
+  keyId: isRazorpayTestMode
+    ? RAZORPAY_TEST_CREDENTIALS.keyId
+    : RAZORPAY_LIVE_CREDENTIALS.keyId,
 
-  // ⬇️ REPLACE THIS WITH YOUR RAZORPAY KEY SECRET (optional for client checkout):
-  keySecret: 'e3lE42kaMxUlxDkewr9qOzQG',
+  // Key Secret: switches between test and live
+  keySecret: isRazorpayTestMode
+    ? RAZORPAY_TEST_CREDENTIALS.keySecret
+    : RAZORPAY_LIVE_CREDENTIALS.keySecret,
 
-  // Store Currency ('USD' for US Dollars, 'INR' for Indian Rupees)
-  currency: 'USD',
-  currencySymbol: '$',
+  // Currency & Store Branding
+  currency: process.env.EXPO_PUBLIC_CURRENCY || 'USD',
+  currencySymbol: process.env.EXPO_PUBLIC_CURRENCY_SYMBOL || '$',
+  companyName: process.env.EXPO_PUBLIC_COMPANY_NAME || 'aa21pa-digits',
+  companyDescription:
+    process.env.EXPO_PUBLIC_COMPANY_DESC || 'Curated PDF E-Books & Handbooks',
+  themeColor: process.env.EXPO_PUBLIC_THEME_COLOR || '#0c2340',
+  supportEmail:
+    process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'aa21pa-solutions@gmail.com',
 
-  // Business & Branding details
-  companyName: 'aa21pa-digits',
-  companyDescription: 'Curated PDF E-Books & Handbooks',
-  themeColor: '#0c2340', // Razorpay signature dark navy blue
-  supportEmail: 'aa21pa-solutions@gmail.com',
-
-  // Set false for live production
-  isTestMode: true,
+  // Active mode flag
+  isTestMode: isRazorpayTestMode,
 };

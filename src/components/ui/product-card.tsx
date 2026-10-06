@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { SymbolView, type SFSymbol, type AndroidSymbol } from 'expo-symbols';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
@@ -20,6 +21,7 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
+  const router = useRouter();
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -53,8 +55,13 @@ export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
   return (
     <Pressable
       onPress={() => {
-        if (!isComingSoon && onPress) {
+        if (onPress) {
           onPress();
+        } else {
+          router.push({
+            pathname: '/(dashboard)/product-details',
+            params: { id: product.id },
+          });
         }
       }}
       onHoverIn={() => {
@@ -317,24 +324,29 @@ export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
               </View>
             ) : (
               <>
-                {onBuyNow ? (
-                  <Pressable
-                    onPress={(e) => {
-                      e?.stopPropagation?.();
+                <Pressable
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    if (onBuyNow) {
                       onBuyNow(product);
-                    }}
-                    style={({ pressed }) => [
-                      styles.prominentBuyBtn,
-                      pressed && styles.buttonPressed,
-                    ]}>
-                    <SymbolView
-                      name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
-                      tintColor="#ffffff"
-                      size={14}
-                    />
-                    <ThemedText style={styles.prominentBuyText}>Buy Now</ThemedText>
-                  </Pressable>
-                ) : null}
+                    } else {
+                      router.push({
+                        pathname: '/(dashboard)/product-details',
+                        params: { id: product.id },
+                      });
+                    }
+                  }}
+                  style={({ pressed }) => [
+                    styles.prominentBuyBtn,
+                    pressed && styles.buttonPressed,
+                  ]}>
+                  <SymbolView
+                    name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+                    tintColor="#ffffff"
+                    size={14}
+                  />
+                  <ThemedText style={styles.prominentBuyText}>Buy Now</ThemedText>
+                </Pressable>
 
                 {/* Quick Cart Button or Stepper */}
                 {quantity === 0 ? (
@@ -415,26 +427,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1.5,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 6,
     flex: 1,
     justifyContent: 'space-between',
+    ...Platform.select({
+      web: {
+        transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+      } as any,
+    }),
   },
   pressed: {
     transform: [{ scale: 0.985 }],
     opacity: 0.95,
   },
   heroCanvas: {
-    margin: 8,
-    borderRadius: 16,
+    margin: 10,
+    borderRadius: 18,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     minHeight: 240,
     justifyContent: 'space-between',
   },
@@ -449,12 +466,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
     maxWidth: '68%',
     flexShrink: 1,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   brandText: {
     fontSize: 11,
@@ -462,14 +485,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   badgeContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
     flexShrink: 0,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 3px 12px rgba(0, 0, 0, 0.15)',
+      } as any,
+    }),
   },
   badgeText: {
     color: '#ffffff',
@@ -485,14 +513,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   coverImage: {
-    width: 140,
-    height: 205,
-    borderRadius: 8,
+    width: 145,
+    height: 210,
+    borderRadius: 10,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
   emblemWrapper: {
     alignItems: 'center',
@@ -532,10 +560,10 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
   },
   productName: {
-    fontSize: 14.5,
-    lineHeight: 20,
-    fontWeight: '700',
-    minHeight: 40,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '800',
+    minHeight: 42,
     marginBottom: 4,
   },
   productDescription: {
@@ -606,13 +634,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: '#6366f1',
-    height: 38,
-    borderRadius: 8,
+    height: 40,
+    borderRadius: 12,
     shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   prominentBuyText: {
     color: '#ffffff',
@@ -621,12 +656,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   quickCartBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   buttonPressed: {
     opacity: 0.85,

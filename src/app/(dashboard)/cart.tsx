@@ -619,8 +619,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 30,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   clearBtn: {
     paddingHorizontal: 10,
@@ -660,9 +661,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: Spacing.one,
+    fontSize: 24,
+    fontWeight: '900',
+    marginBottom: Spacing.two,
+    letterSpacing: -0.3,
   },
   emptySubtitle: {
     textAlign: 'center',
@@ -671,13 +673,20 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   startShoppingBtn: {
-    minWidth: 200,
+    minWidth: 220,
     backgroundColor: '#6366f1',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   startShoppingBtnText: {
     color: '#ffffff',
@@ -694,9 +703,17 @@ const styles = StyleSheet.create({
   itemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: 18,
+    padding: Spacing.three + 2,
+    borderRadius: 20,
     gap: Spacing.three,
+    borderWidth: 1,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   itemMainPressable: {
     flex: 1,
@@ -705,9 +722,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   itemHeroBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -782,9 +799,15 @@ const styles = StyleSheet.create({
   },
   addressSectionCard: {
     padding: Spacing.four,
-    borderRadius: 20,
+    borderRadius: 22,
     marginBottom: Spacing.four,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -834,15 +857,23 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   summaryCard: {
-    padding: Spacing.four,
-    borderRadius: 22,
+    padding: Spacing.four + 4,
+    borderRadius: 24,
     marginBottom: Spacing.four,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
+      } as any,
+    }),
   },
   summaryTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: Spacing.three,
+    fontSize: 20,
+    fontWeight: '900',
+    marginBottom: Spacing.three + 4,
+    letterSpacing: -0.3,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -861,13 +892,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
   },
   totalLabel: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   totalAmount: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
     color: '#10b981',
+    letterSpacing: -0.5,
   },
   qualifyingRewardBanner: {
     flexDirection: 'row',

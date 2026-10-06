@@ -36,13 +36,13 @@ export function GradientView({
       case 'to-bottom':
         return 'to bottom';
       case 'to-bottom-right':
-        return '135deg';
+        return 'to bottom right';
       case 'to-top-right':
-        return '45deg';
+        return 'to top right';
       case 'to-bottom-left':
-        return '225deg';
+        return 'to bottom left';
       default:
-        return '135deg';
+        return 'to bottom right';
     }
   };
 

@@ -57,7 +57,7 @@ export function CategoryChip({
           styles.label,
           {
             color: isActive ? '#ffffff' : theme.text,
-            fontWeight: isActive ? '800' : '600',
+            fontWeight: isActive ? '800' : '700',
           },
         ]}>
         {title}
@@ -128,19 +128,27 @@ export function CategoryChip({
 
 const styles = StyleSheet.create({
   activeChip: {
-    paddingHorizontal: Spacing.three + 2,
-    paddingVertical: 9,
-    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
     marginRight: Spacing.two,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      } as any,
+    }),
   },
   inactiveChip: {
-    paddingHorizontal: Spacing.three + 2,
-    paddingVertical: 9,
-    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: 'hidden',
     marginRight: Spacing.two,
@@ -151,9 +159,10 @@ const styles = StyleSheet.create({
     elevation: 1,
     ...Platform.select({
       web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        transition: 'transform 0.15s ease, background-color 0.2s ease',
       } as any,
     }),
   },
@@ -171,18 +180,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   chipBadge: {
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
     marginLeft: 4,
   },
   chipBadgeText: {
     fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   pressed: {
     transform: [{ scale: 0.96 }],

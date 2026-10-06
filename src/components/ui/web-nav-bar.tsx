@@ -322,9 +322,10 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     borderBottomWidth: 1,
-    backdropFilter: 'blur(20px)',
     ...Platform.select({
       web: {
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
         position: 'sticky',
         top: 0,
       } as any,
@@ -348,15 +349,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   logoIconWrapper: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)',
+      } as any,
+    }),
   },
   logoTitleRow: {
     flexDirection: 'row',
@@ -391,10 +397,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   navLink: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    transitionDuration: '150ms',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   } as any,
   navLinkActive: {
     borderWidth: 1,
@@ -467,19 +478,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   cartButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   actionBtnText: {
     fontSize: 12,
@@ -501,8 +524,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: '#ffffff',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 8px rgba(244, 63, 94, 0.4)',
+        animationKeyframes: 'pulse',
+        animationDuration: '2s',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+      } as any,
+    }),
   },
   cartBadgeText: {
     color: '#ffffff',

@@ -100,7 +100,7 @@ export function ThemedButton({
       case 'small':
         return { height: 40, borderRadius: 20, innerRadius: 18 };
       case 'large':
-        return { height: 58, borderRadius: 29, innerRadius: 27 };
+        return { height: 'auto', paddingVertical: 16, borderRadius: 16, innerRadius: 14 };
       default:
         return { height: 48, borderRadius: 24, innerRadius: 22 };
     }
@@ -135,6 +135,7 @@ export function ThemedButton({
           isDark ? styles.outerBaseDark : styles.outerBaseLight,
           {
             height: sizeConfig.height,
+            paddingVertical: (sizeConfig as any).paddingVertical,
             borderRadius: sizeConfig.borderRadius,
           },
           pressed && styles.pressed,
@@ -170,6 +171,7 @@ export function ThemedButton({
         isDark ? styles.outerBaseDark : styles.outerBaseLight,
         {
           height: sizeConfig.height,
+          paddingVertical: (sizeConfig as any).paddingVertical,
           borderRadius: sizeConfig.borderRadius,
         },
         pressed && styles.pressed,
@@ -202,6 +204,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'stretch',
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      } as any,
+    }),
   },
   outerBaseLight: {
     backgroundColor: '#ffffff',
@@ -260,6 +268,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: '#ffffff',
+    borderRadius: 14,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(99, 102, 241, 0.3)',
+      } as any,
+    }),
   },
   gradientInner: {
     flex: 1,

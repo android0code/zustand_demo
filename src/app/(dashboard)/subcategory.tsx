@@ -469,12 +469,16 @@ export default function SubcategoryScreen() {
                     <ProductCard
                       product={product}
                       onBuyNow={(prod) => {
-                        if (prod.status === 'coming_soon' || !prod.inStock) return;
-                        setCheckoutProduct(prod);
+                        router.push({
+                          pathname: '/(dashboard)/product-details',
+                          params: { id: prod.id },
+                        });
                       }}
                       onPress={() => {
-                        if (product.status === 'coming_soon' || !product.inStock) return;
-                        setCheckoutProduct(product);
+                        router.push({
+                          pathname: '/(dashboard)/product-details',
+                          params: { id: product.id },
+                        });
                       }}
                     />
                   </View>
