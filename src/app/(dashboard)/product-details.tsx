@@ -76,6 +76,7 @@ export default function ProductDetailsScreen() {
   // Checkout process states: 'form' | 'processing' | 'success'
   const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
   const [razorpayPaymentId, setRazorpayPaymentId] = useState('');
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
@@ -230,9 +231,10 @@ export default function ProductDetailsScreen() {
           onError: (err) => {
             console.warn('Razorpay checkout notice:', err);
             setStep('form');
-            if (Platform.OS === 'web') {
-              alert(`Razorpay notice: ${err.description || 'Payment was cancelled or closed'}. You can retry or use Instant Test Pay below.`);
-            }
+            setPaymentNotice(
+              err.description ||
+                'International cards are not supported on this Razorpay merchant account. In test mode, please choose UPI or Netbanking in the Razorpay popup, or click Instant Test Pay.'
+            );
           },
         });
 
@@ -398,14 +400,14 @@ export default function ProductDetailsScreen() {
                     {/* Price & Savings Tag */}
                     <View style={styles.priceRow}>
                       <ThemedText style={[styles.priceTag, { color: product.colorAccent }]}>
-                        ${product.price.toFixed(2)}
+                        {RAZORPAY_CONFIG.currencySymbol}{product.price.toFixed(2)}
                       </ThemedText>
 
                       {product.originalPrice && (
                         <ThemedText
                           type="subtitle"
                           style={styles.originalPrice}>
-                          ${product.originalPrice.toFixed(2)}
+                          {RAZORPAY_CONFIG.currencySymbol}{product.originalPrice.toFixed(2)}
                         </ThemedText>
                       )}
 
@@ -753,6 +755,34 @@ export default function ProductDetailsScreen() {
                       Click below to complete payment securely via official Razorpay.
                     </ThemedText>
 
+                    {paymentNotice && (
+                      <View style={styles.paymentNoticeBox}>
+                        <View style={styles.paymentNoticeHeader}>
+                          <SymbolView
+                            name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+                            tintColor="#f59e0b"
+                            size={16}
+                          />
+                          <ThemedText style={styles.paymentNoticeTitle}>
+                            International Cards Not Supported
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={styles.paymentNoticeBody}>
+                          {paymentNotice}
+                        </ThemedText>
+                        <Pressable
+                          onPress={() => executeDirectProductPayment()}
+                          style={({ pressed }) => [
+                            styles.quickNoticeBtn,
+                            pressed && { opacity: 0.85 },
+                          ]}>
+                          <ThemedText style={styles.quickNoticeBtnText}>
+                            ⚡ Complete Order Instantly via Test Pay →
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+                    )}
+
                     {/* Email for delivery */}
                     <View style={styles.fieldGroup}>
                       <ThemedText style={styles.fieldLabel}>
@@ -799,7 +829,7 @@ export default function ProductDetailsScreen() {
                       {appliedCoupon ? (
                         <View style={styles.couponAppliedRow}>
                           <ThemedText style={{ color: '#10b981', fontWeight: '700', fontSize: 12 }}>
-                            ✓ {appliedCoupon} applied (-${discountAmount.toFixed(2)})
+                            ✓ {appliedCoupon} applied (-{RAZORPAY_CONFIG.currencySymbol}{discountAmount.toFixed(2)})
                           </ThemedText>
                           <Pressable onPress={handleRemoveCoupon}>
                             <ThemedText style={{ color: theme.danger, fontWeight: '700', fontSize: 11 }}>
@@ -851,7 +881,7 @@ export default function ProductDetailsScreen() {
                       ]}>
                       <View style={styles.summaryLine}>
                         <ThemedText type="small" themeColor="textSecondary">Item Subtotal</ThemedText>
-                        <ThemedText type="smallBold">${unitPrice.toFixed(2)}</ThemedText>
+                        <ThemedText type="smallBold">{RAZORPAY_CONFIG.currencySymbol}{unitPrice.toFixed(2)}</ThemedText>
                       </View>
 
                       {discountAmount > 0 && (
@@ -860,7 +890,7 @@ export default function ProductDetailsScreen() {
                             Coupon Discount ({appliedCoupon})
                           </ThemedText>
                           <ThemedText type="smallBold" style={{ color: '#10b981' }}>
-                            -${discountAmount.toFixed(2)}
+                            -{RAZORPAY_CONFIG.currencySymbol}{discountAmount.toFixed(2)}
                           </ThemedText>
                         </View>
                       )}
@@ -872,7 +902,7 @@ export default function ProductDetailsScreen() {
 
                       <View style={styles.summaryLine}>
                         <ThemedText type="small" themeColor="textSecondary">Tax (8%)</ThemedText>
-                        <ThemedText type="smallBold">${tax.toFixed(2)}</ThemedText>
+                        <ThemedText type="smallBold">{RAZORPAY_CONFIG.currencySymbol}{tax.toFixed(2)}</ThemedText>
                       </View>
 
                       <View style={[styles.summaryDivider, { backgroundColor: theme.cardBorder }]} />
@@ -880,14 +910,14 @@ export default function ProductDetailsScreen() {
                       <View style={styles.summaryTotalLine}>
                         <ThemedText type="subtitle" style={{ fontWeight: '800' }}>Total Due</ThemedText>
                         <ThemedText type="subtitle" style={{ color: theme.primary, fontWeight: '900' }}>
-                          ${finalTotal.toFixed(2)}
+                          {RAZORPAY_CONFIG.currencySymbol}{finalTotal.toFixed(2)}
                         </ThemedText>
                       </View>
                     </View>
 
                     {/* DIRECT BUY BUTTON: OPENS OFFICIAL RAZORPAY PAGE / POPUP */}
                     <ThemedButton
-                      title={`⚡ Pay $${finalTotal.toFixed(2)} with Razorpay`}
+                      title={`⚡ Pay ${RAZORPAY_CONFIG.currencySymbol}${finalTotal.toFixed(2)} with Razorpay`}
                       variant="gradient"
                       gradientColors={Gradients.primary}
                       onPress={handlePay}
@@ -1492,6 +1522,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   applyCouponBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  paymentNoticeBox: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    marginVertical: 6,
+  },
+  paymentNoticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paymentNoticeTitle: {
+    color: '#f59e0b',
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  paymentNoticeBody: {
+    color: '#94a3b8',
+    fontSize: 11.5,
+    lineHeight: 16,
+  },
+  quickNoticeBtn: {
+    backgroundColor: '#10b981',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  quickNoticeBtnText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '800',

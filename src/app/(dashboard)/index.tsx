@@ -29,6 +29,7 @@ import { useAuthStore } from '@/store/use-auth-store';
 import { useProductStore } from '@/store/use-product-store';
 import { useCartStore } from '@/store/use-cart-store';
 import type { Product } from '@/services/api';
+import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 export default function ShopHomeScreen() {
   const router = useRouter();
@@ -395,7 +396,7 @@ export default function ShopHomeScreen() {
 
               <View style={styles.floatingCartRight}>
                 <ThemedText style={styles.floatingCartPrice}>
-                  ${cartTotal.toFixed(2)}
+                  {RAZORPAY_CONFIG.currencySymbol}{cartTotal.toFixed(2)}
                 </ThemedText>
                 <View style={styles.cartCtaPill}>
                   <ThemedText style={styles.cartCtaText}>Checkout →</ThemedText>

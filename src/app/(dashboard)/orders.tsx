@@ -28,6 +28,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useOrderStore } from '@/store/use-order-store';
 import { useCartStore } from '@/store/use-cart-store';
 import type { OrderStatus } from '@/services/api';
+import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -444,7 +445,7 @@ export default function OrdersScreen() {
                         Paid with Razorpay
                       </ThemedText>
                       <ThemedText type="subtitle" style={styles.orderTotal}>
-                        ${order.total.toFixed(2)}
+                        {RAZORPAY_CONFIG.currencySymbol}{order.total.toFixed(2)}
                       </ThemedText>
                     </View>
 

@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { Product } from '@/services/api';
 import { useCartStore } from '@/store/use-cart-store';
+import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 const productCovers: Record<string, any> = {
   'prod-ebook-1': require('@/assets/30Days_Hustle.png'),
@@ -293,7 +294,7 @@ export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
 
               <View style={styles.priceContainer}>
                 <ThemedText type="subtitle" style={styles.currentPrice}>
-                  ${product.price.toFixed(2)}
+                  {RAZORPAY_CONFIG.currencySymbol}{product.price.toFixed(2)}
                 </ThemedText>
               </View>
             </View>

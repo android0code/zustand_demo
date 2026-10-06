@@ -32,6 +32,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCartStore } from '@/store/use-cart-store';
 import { useOrderStore } from '@/store/use-order-store';
 import { useAddressStore } from '@/store/use-address-store';
+import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -269,7 +270,7 @@ export default function CartScreen() {
                           {product.fileFormat || product.specs[0] || 'Digital File'} • {product.brand}
                         </ThemedText>
                         <ThemedText type="smallBold" style={styles.itemPrice}>
-                          ${(product.price * quantity).toFixed(2)}
+                          {RAZORPAY_CONFIG.currencySymbol}{(product.price * quantity).toFixed(2)}
                         </ThemedText>
                       </View>
                     </View>
@@ -489,7 +490,7 @@ export default function CartScreen() {
                 <ThemedText type="small" themeColor="textSecondary">
                   Subtotal
                 </ThemedText>
-                <ThemedText type="smallBold">${subtotal.toFixed(2)}</ThemedText>
+                <ThemedText type="smallBold">{RAZORPAY_CONFIG.currencySymbol}{subtotal.toFixed(2)}</ThemedText>
               </View>
 
               {discount > 0 && (
@@ -498,7 +499,7 @@ export default function CartScreen() {
                     Coupon Discount ({couponCode})
                   </ThemedText>
                   <ThemedText type="smallBold" style={{ color: '#10b981' }}>
-                    -${discount.toFixed(2)}
+                    -{RAZORPAY_CONFIG.currencySymbol}{discount.toFixed(2)}
                   </ThemedText>
                 </View>
               )}
@@ -518,7 +519,7 @@ export default function CartScreen() {
                 <ThemedText type="small" themeColor="textSecondary">
                   Estimated Tax (8%)
                 </ThemedText>
-                <ThemedText type="smallBold">${tax.toFixed(2)}</ThemedText>
+                <ThemedText type="smallBold">{RAZORPAY_CONFIG.currencySymbol}{tax.toFixed(2)}</ThemedText>
               </View>
 
               <View
@@ -533,7 +534,7 @@ export default function CartScreen() {
                   Total Due
                 </ThemedText>
                 <ThemedText type="subtitle" style={[styles.totalAmount, { color: theme.primary }]}>
-                  ${total.toFixed(2)}
+                  {RAZORPAY_CONFIG.currencySymbol}{total.toFixed(2)}
                 </ThemedText>
               </View>
 
@@ -559,7 +560,7 @@ export default function CartScreen() {
               )}
 
               <ThemedButton
-                title={`⚡ Pay with Razorpay • $${total.toFixed(2)}`}
+                title={`⚡ Pay with Razorpay • ${RAZORPAY_CONFIG.currencySymbol}${total.toFixed(2)}`}
                 variant="gradient"
                 gradientColors={Gradients.primary}
                 onPress={() => setIsRazorpayModalVisible(true)}

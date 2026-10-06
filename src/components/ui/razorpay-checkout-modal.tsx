@@ -60,6 +60,7 @@ export function RazorpayCheckoutModal({
   // Checkout process states: 'form' | 'processing' | 'success'
   const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
 
   // Computations
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -182,9 +183,10 @@ export function RazorpayCheckoutModal({
           onError: (err) => {
             console.warn('Razorpay checkout notice:', err);
             setStep('form');
-            if (Platform.OS === 'web') {
-              alert(`Razorpay notice: ${err.description || 'Payment was cancelled or closed'}. You can retry or use Instant Test Pay below.`);
-            }
+            setPaymentNotice(
+              err.description ||
+                'International cards are not supported on this Razorpay merchant account. In test mode, please choose UPI or Netbanking in the Razorpay popup, or click Instant Test Pay.'
+            );
           },
         });
 
@@ -475,7 +477,7 @@ export function RazorpayCheckoutModal({
                         </Text>
                       </View>
                       <Text style={[styles.purchasedItemPrice, { color: theme.text }]}>
-                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                        {RAZORPAY_CONFIG.currencySymbol}{(item.unitPrice * item.quantity).toFixed(2)}
                       </Text>
                     </View>
                   ))}
@@ -534,7 +536,7 @@ export function RazorpayCheckoutModal({
                   <View style={styles.amountDueBox}>
                     <Text style={styles.amountDueLabel}>AMOUNT DUE</Text>
                     <Text style={[styles.amountDueValue, { color: isDark ? '#93c5fd' : '#0066ff' }]}>
-                      ${total.toFixed(2)}
+                      {RAZORPAY_CONFIG.currencySymbol}{total.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -559,7 +561,7 @@ export function RazorpayCheckoutModal({
                         </Text>
                       </View>
                       <Text style={[styles.previewItemPrice, { color: theme.text }]}>
-                        ${(it.product.price * it.quantity).toFixed(2)}
+                        {RAZORPAY_CONFIG.currencySymbol}{(it.product.price * it.quantity).toFixed(2)}
                       </Text>
                     </View>
                   ))}
@@ -570,7 +572,7 @@ export function RazorpayCheckoutModal({
                         Discount Applied ({couponCode})
                       </Text>
                       <Text style={{ fontSize: 11, color: '#10b981', fontWeight: '700' }}>
-                        -${discountAmount.toFixed(2)}
+                        -{RAZORPAY_CONFIG.currencySymbol}{discountAmount.toFixed(2)}
                       </Text>
                     </View>
                   )}
@@ -589,10 +591,38 @@ export function RazorpayCheckoutModal({
                   <View style={styles.totalRow}>
                     <Text style={[styles.totalLabel, { color: theme.text }]}>Total</Text>
                     <Text style={[styles.totalAmount, { color: isDark ? '#93c5fd' : '#0066ff' }]}>
-                      ${total.toFixed(2)}
+                      {RAZORPAY_CONFIG.currencySymbol}{total.toFixed(2)}
                     </Text>
                   </View>
                 </View>
+
+                {paymentNotice && (
+                  <View style={styles.paymentNoticeBox}>
+                    <View style={styles.paymentNoticeHeader}>
+                      <SymbolView
+                        name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+                        tintColor="#f59e0b"
+                        size={16}
+                      />
+                      <Text style={styles.paymentNoticeTitle}>
+                        International Cards Not Supported
+                      </Text>
+                    </View>
+                    <Text style={styles.paymentNoticeBody}>
+                      {paymentNotice}
+                    </Text>
+                    <Pressable
+                      onPress={() => executeDirectPayment()}
+                      style={({ pressed }) => [
+                        styles.quickNoticeBtn,
+                        pressed && { opacity: 0.85 },
+                      ]}>
+                      <Text style={styles.quickNoticeBtnText}>
+                        ⚡ Complete Order Instantly via Test Pay →
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
 
                 {/* Digital Delivery Email Input */}
                 <View style={styles.inputGroup}>
@@ -729,7 +759,7 @@ export function RazorpayCheckoutModal({
                     size={14}
                   />
                   <Text style={styles.paySubmitBtnText}>
-                    Pay ${total.toFixed(2)} with Razorpay
+                    Pay {RAZORPAY_CONFIG.currencySymbol}{total.toFixed(2)} with Razorpay
                   </Text>
                 </Pressable>
 
@@ -980,6 +1010,43 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 11,
     lineHeight: 15,
+  },
+  paymentNoticeBox: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    marginVertical: 6,
+  },
+  paymentNoticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paymentNoticeTitle: {
+    color: '#f59e0b',
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  paymentNoticeBody: {
+    color: '#94a3b8',
+    fontSize: 11.5,
+    lineHeight: 16,
+  },
+  quickNoticeBtn: {
+    backgroundColor: '#10b981',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  quickNoticeBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
   },
   acceptedMethodsBox: {
     padding: 12,

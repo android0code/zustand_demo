@@ -110,8 +110,8 @@ export const RAZORPAY_CONFIG: RazorpayConfig = {
     : RAZORPAY_LIVE_CREDENTIALS.keySecret,
 
   // Currency & Store Branding
-  currency: process.env.EXPO_PUBLIC_CURRENCY || 'USD',
-  currencySymbol: process.env.EXPO_PUBLIC_CURRENCY_SYMBOL || '$',
+  currency: process.env.EXPO_PUBLIC_CURRENCY || 'INR',
+  currencySymbol: process.env.EXPO_PUBLIC_CURRENCY_SYMBOL || '₹',
   companyName: process.env.EXPO_PUBLIC_COMPANY_NAME || 'aa21pa-digits',
   companyDescription:
     process.env.EXPO_PUBLIC_COMPANY_DESC || 'Curated PDF E-Books & Handbooks',
