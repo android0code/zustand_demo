@@ -347,10 +347,8 @@ export default function ShopHomeScreen() {
                     <ProductCard
                       product={product}
                       onBuyNow={(prod) => {
-                        router.push({
-                          pathname: '/(dashboard)/product-details',
-                          params: { id: prod.id },
-                        });
+                        if (prod.status === 'coming_soon' || !prod.inStock) return;
+                        setCheckoutProduct(prod);
                       }}
                       onPress={() => {
                         router.push({

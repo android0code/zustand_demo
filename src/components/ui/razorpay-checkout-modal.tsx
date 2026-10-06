@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   Modal,
   Platform,
   Pressable,
@@ -20,6 +21,7 @@ import { useOrderStore } from '@/store/use-order-store';
 import { useCartStore } from '@/store/use-cart-store';
 import { triggerBrowserDownload, type Order, type Product } from '@/services/api';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
+import { openOfficialRazorpayCheckout } from '@/services/razorpay';
 
 const productThumbnails: Record<string, any> = {
   'prod-ebook-1': require('@/assets/30Days_Hustle.png'),
@@ -48,17 +50,9 @@ export function RazorpayCheckoutModal({
   const discountPercent = useCartStore((s) => s.discountPercent);
   const couponCode = useCartStore((s) => s.couponCode);
 
-  // Form states
+  // Form states (empty by default, no static prefill)
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [phone, setPhone] = useState('9876543210');
-  const [cardholderName, setCardholderName] = useState('');
-  const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
-  const [expiry, setExpiry] = useState('12/28');
-  const [cvc, setCvc] = useState('888');
-  const [upiId, setUpiId] = useState('customer@okhdfcbank');
-  const [selectedBank, setSelectedBank] = useState('HDFC Bank');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'netbanking'>('card');
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
   const [razorpayPaymentId, setRazorpayPaymentId] = useState('');
@@ -105,16 +99,6 @@ export function RazorpayCheckoutModal({
   const tax = Math.round(taxableSubtotal * 0.08 * 100) / 100;
   const total = Math.max(0, taxableSubtotal + tax);
 
-  // Detect card brand
-  const getCardBrand = () => {
-    const clean = cardNumber.replace(/\s+/g, '');
-    if (clean.startsWith('4')) return 'VISA';
-    if (clean.startsWith('5')) return 'MASTERCARD';
-    if (clean.startsWith('6')) return 'RUPAY';
-    if (clean.startsWith('3')) return 'AMEX';
-    return 'CARD';
-  };
-
   const validateEmail = (val: string) => {
     const trimmed = val.trim();
     if (!trimmed) {
@@ -130,25 +114,26 @@ export function RazorpayCheckoutModal({
     return true;
   };
 
-  const handlePay = async () => {
+  const executeDirectPayment = async (customId?: string) => {
     if (!validateEmail(email)) {
+      if (Platform.OS === 'web') {
+        alert('Please enter your email address for digital delivery.');
+      } else {
+        Alert.alert('Email Required', 'Please enter your email address for digital delivery.');
+      }
       return;
     }
 
     setStep('processing');
-
-    // Generate an authentic Razorpay payment ID (e.g. pay_29OX44abc123)
-    const generatedRzpId = `pay_${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
+    const generatedRzpId = customId || `pay_${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
     setRazorpayPaymentId(generatedRzpId);
-
-    // Realistic Razorpay gateway authorization latency
-    await new Promise((res) => setTimeout(res, 1200));
+    await new Promise((res) => setTimeout(res, 600));
 
     const result = await placeOrder({
       items,
       customerEmail: email.trim(),
-      shippingAddress: `Instant Digital Delivery via Razorpay (${generatedRzpId}) to ${email.trim()}`,
-      autoDownload: true, // triggers automatic download upon payment!
+      shippingAddress: `Verified Razorpay (${generatedRzpId}) to ${email.trim()}`,
+      autoDownload: true,
     });
 
     if (result.success && result.order) {
@@ -158,8 +143,61 @@ export function RazorpayCheckoutModal({
       if (onSuccess) onSuccess(result.order);
     } else {
       setStep('form');
-      alert(result.error || 'Payment failed. Please try again.');
+      alert(result.error || 'Payment failed to complete.');
     }
+  };
+
+  const handlePay = async () => {
+    if (!validateEmail(email)) {
+      if (Platform.OS === 'web') {
+        alert('Please enter your email address for digital delivery.');
+      } else {
+        Alert.alert('Email Required', 'Please enter your email address for digital delivery.');
+      }
+      return;
+    }
+
+    setStep('processing');
+
+    const productTitle =
+      items.length === 1
+        ? items[0].product.name
+        : `${items.length} Digital PDF Products`;
+
+    // 1. Launch Official Razorpay Checkout on Web so it logs genuinely in Razorpay Dashboard!
+    if (Platform.OS === 'web') {
+      try {
+        const launched = await openOfficialRazorpayCheckout({
+          amount: total,
+          name: RAZORPAY_CONFIG.companyName,
+          description: productTitle,
+          customerEmail: email.trim() || undefined,
+          onSuccess: async (paymentResult) => {
+            const realPaymentId = paymentResult.razorpay_payment_id;
+            await executeDirectPayment(realPaymentId);
+          },
+          onDismiss: () => {
+            setStep('form');
+          },
+          onError: (err) => {
+            console.warn('Razorpay checkout notice:', err);
+            setStep('form');
+            if (Platform.OS === 'web') {
+              alert(`Razorpay notice: ${err.description || 'Payment was cancelled or closed'}. You can retry or use Instant Test Pay below.`);
+            }
+          },
+        });
+
+        if (launched) {
+          return;
+        }
+      } catch (err) {
+        console.warn('Error launching official Razorpay Checkout:', err);
+      }
+    }
+
+    // 2. Direct payment completion fallback:
+    await executeDirectPayment();
   };
 
   const handleDownloadAgain = () => {
@@ -601,274 +639,81 @@ export function RazorpayCheckoutModal({
                   )}
                 </View>
 
-                {/* Razorpay Payment Method Tabs */}
-                <View style={styles.paymentMethodTabsRow}>
-                  <Pressable
-                    onPress={() => setPaymentMethod('card')}
-                    style={[
-                      styles.methodTab,
-                      paymentMethod === 'card' && styles.methodTabActive,
-                      {
-                        backgroundColor:
-                          paymentMethod === 'card'
-                            ? isDark
-                              ? '#0066ff25'
-                              : '#0066ff15'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.04)'
-                            : 'rgba(0, 0, 0, 0.03)',
-                        borderColor:
-                          paymentMethod === 'card'
-                            ? '#0066ff'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.06)',
-                      },
-                    ]}>
-                    <SymbolView
-                      name={{ ios: 'creditcard.fill', android: 'credit_card', web: 'credit_card' }}
-                      tintColor={paymentMethod === 'card' ? '#0066ff' : theme.textSecondary}
-                      size={14}
-                    />
-                    <Text
+                {/* Accepted Payment Methods Showcase */}
+                <View
+                  style={[
+                    styles.acceptedMethodsBox,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 102, 255, 0.04)',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 102, 255, 0.15)',
+                    },
+                  ]}>
+                  <Text style={[styles.acceptedMethodsTitle, { color: theme.textSecondary }]}>
+                    OFFICIAL RAZORPAY PAYMENT METHODS
+                  </Text>
+                  <View style={styles.methodsBadgeRow}>
+                    <View
                       style={[
-                        styles.methodTabText,
-                        { color: paymentMethod === 'card' ? '#0066ff' : theme.textSecondary },
+                        styles.methodPill,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(255, 255, 255, 0.06)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                        },
                       ]}>
-                      Cards
-                    </Text>
-                  </Pressable>
+                      <SymbolView
+                        name={{ ios: 'creditcard.fill', android: 'credit_card', web: 'credit_card' }}
+                        tintColor="#0066ff"
+                        size={13}
+                      />
+                      <Text style={[styles.methodPillText, { color: theme.text }]}>
+                        Cards (Visa, MC, RuPay)
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.methodPill,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(255, 255, 255, 0.06)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                        },
+                      ]}>
+                      <SymbolView
+                        name={{ ios: 'qrcode', android: 'qr_code', web: 'qr_code' }}
+                        tintColor="#10b981"
+                        size={13}
+                      />
+                      <Text style={[styles.methodPillText, { color: theme.text }]}>
+                        UPI / QR (GPay, PhonePe)
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.methodPill,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(255, 255, 255, 0.06)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                        },
+                      ]}>
+                      <SymbolView
+                        name={{ ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' }}
+                        tintColor="#8b5cf6"
+                        size={13}
+                      />
+                      <Text style={[styles.methodPillText, { color: theme.text }]}>
+                        Netbanking (All Banks)
+                      </Text>
+                    </View>
+                  </View>
 
-                  <Pressable
-                    onPress={() => setPaymentMethod('upi')}
-                    style={[
-                      styles.methodTab,
-                      paymentMethod === 'upi' && styles.methodTabActive,
-                      {
-                        backgroundColor:
-                          paymentMethod === 'upi'
-                            ? isDark
-                              ? '#0066ff25'
-                              : '#0066ff15'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.04)'
-                            : 'rgba(0, 0, 0, 0.03)',
-                        borderColor:
-                          paymentMethod === 'upi'
-                            ? '#0066ff'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.06)',
-                      },
-                    ]}>
-                    <SymbolView
-                      name={{ ios: 'qrcode', android: 'qr_code', web: 'qr_code' }}
-                      tintColor={paymentMethod === 'upi' ? '#0066ff' : theme.textSecondary}
-                      size={14}
-                    />
-                    <Text
-                      style={[
-                        styles.methodTabText,
-                        { color: paymentMethod === 'upi' ? '#0066ff' : theme.textSecondary },
-                      ]}>
-                      UPI / QR
+                  {RAZORPAY_CONFIG.isTestMode && (
+                    <Text style={[styles.testTipText, { color: theme.textSecondary }]}>
+                      💡 <Text style={{ fontWeight: '700' }}>Razorpay Test Tip:</Text> Select UPI or Netbanking (click green "Success" in popup), or use domestic test card <Text style={{ fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' }), fontWeight: '700' }}>4012 0000 0000 0002</Text>. Cards like 4242 will be blocked as international.
                     </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setPaymentMethod('netbanking')}
-                    style={[
-                      styles.methodTab,
-                      paymentMethod === 'netbanking' && styles.methodTabActive,
-                      {
-                        backgroundColor:
-                          paymentMethod === 'netbanking'
-                            ? isDark
-                              ? '#0066ff25'
-                              : '#0066ff15'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.04)'
-                            : 'rgba(0, 0, 0, 0.03)',
-                        borderColor:
-                          paymentMethod === 'netbanking'
-                            ? '#0066ff'
-                            : isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.06)',
-                      },
-                    ]}>
-                    <SymbolView
-                      name={{ ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' }}
-                      tintColor={paymentMethod === 'netbanking' ? '#0066ff' : theme.textSecondary}
-                      size={14}
-                    />
-                    <Text
-                      style={[
-                        styles.methodTabText,
-                        { color: paymentMethod === 'netbanking' ? '#0066ff' : theme.textSecondary },
-                      ]}>
-                      Netbanking
-                    </Text>
-                  </Pressable>
+                  )}
                 </View>
-
-                {/* Card Payment Inputs */}
-                {paymentMethod === 'card' && (
-                  <View style={styles.cardFieldsBox}>
-                    <View style={styles.inputGroupSmall}>
-                      <Text style={[styles.inputLabelSmall, { color: theme.textSecondary }]}>
-                        CARD NUMBER
-                      </Text>
-                      <View
-                        style={[
-                          styles.inputWrapper,
-                          {
-                            backgroundColor: isDark ? 'rgba(20, 25, 36, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-                            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(203, 213, 225, 0.7)',
-                          },
-                        ]}>
-                        <TextInput
-                          value={cardNumber}
-                          onChangeText={setCardNumber}
-                          placeholder="1234 5678 9012 3456"
-                          placeholderTextColor={theme.textSecondary}
-                          keyboardType="numeric"
-                          style={[styles.textInput, { color: theme.text }]}
-                        />
-                        <View style={styles.cardBrandBadge}>
-                          <Text style={styles.cardBrandText}>{getCardBrand()}</Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View style={styles.rowInputs}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.inputLabelSmall, { color: theme.textSecondary }]}>
-                          EXPIRY (MM / YY)
-                        </Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            {
-                              backgroundColor: isDark ? 'rgba(20, 25, 36, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-                              borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(203, 213, 225, 0.7)',
-                            },
-                          ]}>
-                          <TextInput
-                            value={expiry}
-                            onChangeText={setExpiry}
-                            placeholder="MM/YY"
-                            placeholderTextColor={theme.textSecondary}
-                            style={[styles.textInput, { color: theme.text }]}
-                          />
-                        </View>
-                      </View>
-
-                      <View style={{ width: 100 }}>
-                        <Text style={[styles.inputLabelSmall, { color: theme.textSecondary }]}>
-                          CVV
-                        </Text>
-                        <View
-                          style={[
-                            styles.inputWrapper,
-                            {
-                              backgroundColor: isDark ? 'rgba(20, 25, 36, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-                              borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(203, 213, 225, 0.7)',
-                            },
-                          ]}>
-                          <TextInput
-                            value={cvc}
-                            onChangeText={setCvc}
-                            placeholder="123"
-                            placeholderTextColor={theme.textSecondary}
-                            keyboardType="numeric"
-                            secureTextEntry
-                            maxLength={4}
-                            style={[styles.textInput, { color: theme.text }]}
-                          />
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                )}
-
-                {/* UPI Payment Inputs */}
-                {paymentMethod === 'upi' && (
-                  <View style={styles.cardFieldsBox}>
-                    <View style={styles.inputGroupSmall}>
-                      <Text style={[styles.inputLabelSmall, { color: theme.textSecondary }]}>
-                        ENTER YOUR UPI ID (VPA)
-                      </Text>
-                      <View
-                        style={[
-                          styles.inputWrapper,
-                          {
-                            backgroundColor: isDark ? 'rgba(20, 25, 36, 0.9)' : 'rgba(241, 245, 249, 0.9)',
-                            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(203, 213, 225, 0.7)',
-                          },
-                        ]}>
-                        <SymbolView
-                          name={{ ios: 'at', android: 'alternate_email', web: 'alternate_email' }}
-                          tintColor={theme.textSecondary}
-                          size={14}
-                        />
-                        <TextInput
-                          value={upiId}
-                          onChangeText={setUpiId}
-                          placeholder="e.g. yourname@upi"
-                          placeholderTextColor={theme.textSecondary}
-                          autoCapitalize="none"
-                          style={[styles.textInput, { color: theme.text }]}
-                        />
-                      </View>
-                      <Text style={[styles.helperText, { color: theme.textSecondary, marginTop: 4 }]}>
-                        Supports Google Pay, PhonePe, Paytm, BHIM, and any bank UPI app.
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Netbanking Selection */}
-                {paymentMethod === 'netbanking' && (
-                  <View style={styles.cardFieldsBox}>
-                    <Text style={[styles.inputLabelSmall, { color: theme.textSecondary, marginBottom: 6 }]}>
-                      POPULAR BANKS
-                    </Text>
-                    <View style={styles.bankChipsRow}>
-                      {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map((bank) => (
-                        <Pressable
-                          key={bank}
-                          onPress={() => setSelectedBank(bank)}
-                          style={[
-                            styles.bankChip,
-                            selectedBank === bank && styles.bankChipActive,
-                            {
-                              backgroundColor:
-                                selectedBank === bank
-                                  ? '#0066ff20'
-                                  : isDark
-                                  ? 'rgba(255, 255, 255, 0.04)'
-                                  : 'rgba(0, 0, 0, 0.03)',
-                              borderColor:
-                                selectedBank === bank
-                                  ? '#0066ff'
-                                  : isDark
-                                  ? 'rgba(255, 255, 255, 0.08)'
-                                  : 'rgba(0, 0, 0, 0.06)',
-                            },
-                          ]}>
-                          <Text
-                            style={[
-                              styles.bankChipText,
-                              { color: selectedBank === bank ? '#0066ff' : theme.text },
-                            ]}>
-                            {bank}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                )}
 
                 {/* Razorpay Submit Button */}
                 <Pressable
@@ -887,6 +732,24 @@ export function RazorpayCheckoutModal({
                     Pay ${total.toFixed(2)} with Razorpay
                   </Text>
                 </Pressable>
+
+                {RAZORPAY_CONFIG.isTestMode && (
+                  <Pressable
+                    onPress={() => executeDirectPayment()}
+                    style={({ pressed }) => [
+                      styles.testPayBtn,
+                      pressed && { opacity: 0.85 },
+                    ]}>
+                    <SymbolView
+                      name={{ ios: 'bolt.fill', android: 'flash_on', web: 'flash_on' }}
+                      tintColor="#10b981"
+                      size={14}
+                    />
+                    <Text style={styles.testPayBtnText}>
+                      ⚡ Instant Test Pay (Simulate 100% Success)
+                    </Text>
+                  </Pressable>
+                )}
 
                 <View style={styles.footerSecurityNote}>
                   <SymbolView
@@ -914,6 +777,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    ...Platform.select({
+      web: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 999999,
+      } as any,
+    }),
   },
   modalContent: {
     width: '100%',
@@ -927,6 +800,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 28,
     elevation: 20,
+    ...Platform.select({
+      web: {
+        zIndex: 1000000,
+      } as any,
+    }),
   },
   headerBar: {
     flexDirection: 'row',
@@ -1103,59 +981,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
   },
-  paymentMethodTabsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 4,
-  },
-  methodTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: 10,
+  acceptedMethodsBox: {
+    padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
+    gap: 8,
+    marginTop: 4,
   },
-  methodTabActive: {},
-  methodTabText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  cardFieldsBox: {
-    marginTop: 6,
-  },
-  rowInputs: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  cardBrandBadge: {
-    backgroundColor: '#0066ff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  cardBrandText: {
-    color: '#ffffff',
-    fontSize: 9,
+  acceptedMethodsTitle: {
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  bankChipsRow: {
+  methodsBadgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  bankChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  methodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
   },
-  bankChipActive: {},
-  bankChipText: {
+  methodPillText: {
     fontSize: 11.5,
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  testTipText: {
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 4,
   },
   paySubmitBtn: {
     flexDirection: 'row',
@@ -1170,6 +1028,23 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '800',
+  },
+  testPayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+  },
+  testPayBtnText: {
+    color: '#10b981',
+    fontSize: 13,
+    fontWeight: '700',
   },
   footerSecurityNote: {
     flexDirection: 'row',

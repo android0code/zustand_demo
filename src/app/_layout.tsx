@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/use-auth-store';
+import { loadRazorpayCheckoutScript } from '@/services/razorpay';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +16,7 @@ export default function RootLayout() {
   const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
+    loadRazorpayCheckoutScript().catch(() => {});
     if (!isLoading) {
       SplashScreen.hideAsync().catch(() => {});
     }
