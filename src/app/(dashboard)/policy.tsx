@@ -30,7 +30,7 @@ interface TabConfig {
 
 const TABS: TabConfig[] = [
   { id: 'return', title: 'Return Policy', icon: 'arrow.uturn.backward.circle.fill', badge: 'Digital Deliveries' },
-  { id: 'refund', title: 'Refund Policy', icon: 'dollarsign.circle.fill', badge: '14-Day Guarantee' },
+  { id: 'refund', title: 'Refund Policy', icon: 'dollarsign.circle.fill', badge: '3-Day Guarantee' },
   { id: 'privacy', title: 'Privacy Policy', icon: 'shield.lefthalf.filled', badge: 'GDPR & Razorpay' },
   { id: 'disclaimer', title: 'Disclaimer', icon: 'exclamationmark.triangle.fill', badge: 'Legal & IP' },
 ];
@@ -165,11 +165,11 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
         />
         <View style={{ flex: 1 }}>
           <ThemedText type="smallBold" style={{ color: '#10b981', marginBottom: 2 }}>
-            14-Day Quality Guarantee
+            3-Day Quality Guarantee
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             We are committed to delivering exceptional, production-grade technical publications. If an e-book is
-            defective, unreadable, or materially misleading, you are protected by our 14-day refund guarantee.
+            defective, unreadable, or materially misleading, you are protected by our 3-day refund guarantee.
           </ThemedText>
         </View>
       </GlassCard>
@@ -179,7 +179,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
           1. Refund Eligibility Conditions
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
-          You are eligible to request a full refund within fourteen (14) calendar days of initial purchase under the following circumstances:
+          You are eligible to request a full refund within three (3) calendar days of initial purchase under the following circumstances:
         </ThemedText>
         <View style={styles.bulletList}>
           <View style={styles.bulletItem}>
@@ -210,7 +210,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
           Due to the instant, non-revocable nature of DRM-free digital PDF publications, refunds cannot be granted solely
           for change of mind, lack of prerequisite software knowledge explicitly outlined on the book page, or requests
-          submitted after 14 calendar days.
+          submitted after 3 calendar days.
         </ThemedText>
       </View>
 

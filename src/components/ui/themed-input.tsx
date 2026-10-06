@@ -146,6 +146,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     paddingVertical: Platform.select({ ios: 12, android: 10, default: 12 }),
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+        borderRadius: 0,
+        borderWidth: 0,
+      } as any,
+    }),
   },
   eyeButton: {
     padding: 6,

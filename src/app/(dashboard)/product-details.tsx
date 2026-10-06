@@ -943,14 +943,6 @@ export default function ProductDetailsScreen() {
                       </Pressable>
                     )}
 
-                    {RAZORPAY_CONFIG.isTestMode && (
-                      <ThemedText
-                        type="small"
-                        themeColor="textSecondary"
-                        style={{ fontSize: 11, textAlign: 'center', lineHeight: 16, marginTop: 4 }}>
-                        💡 <ThemedText style={{ fontWeight: '700' }}>Test Mode Tip:</ThemedText> In Razorpay popup, select UPI or Netbanking (click green "Success"), or use test card <ThemedText style={{ fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' }), fontWeight: '700' }}>4012 0000 0000 0002</ThemedText>. Card 4242 is flagged as foreign.
-                      </ThemedText>
-                    )}
 
                     <View style={styles.footerNoteRow}>
                       <SymbolView
@@ -1429,6 +1421,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     padding: 0,
+    borderWidth: 0,
+    borderRadius: 0,
     outlineStyle: 'none',
   } as any,
   errorText: {

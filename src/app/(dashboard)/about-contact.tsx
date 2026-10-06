@@ -50,7 +50,7 @@ const FAQS: FaqItem[] = [
   {
     question: 'What is your refund policy for PDF e-books?',
     answer:
-      'We offer an unconditional 14-day quality guarantee. If the content does not meet your technical expectations or if you experience unresolvable file corruption, we issue a prompt 100% refund through Razorpay.',
+      'We offer an unconditional 3-day quality guarantee. If the content does not meet your technical expectations or if you experience unresolvable file corruption, we issue a prompt 100% refund through Razorpay.',
   },
 ];
 
@@ -190,7 +190,7 @@ export default function AboutContactScreen() {
                 </View>
                 <ThemedText style={styles.statValue}>Razorpay Verified</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.statLabel}>
-                  Instant 14-Day Refund
+                  Instant 3-Day Refund
                 </ThemedText>
               </GlassCard>
             </View>
@@ -511,7 +511,7 @@ export default function AboutContactScreen() {
                         size={16}
                       />
                       <ThemedText type="small" style={styles.tenetText}>
-                        Razorpay 14-Day Guarantee
+                        Razorpay 3-Day Guarantee
                       </ThemedText>
                     </View>
                   </View>

@@ -1000,6 +1000,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     padding: 0,
+    borderWidth: 0,
+    borderRadius: 0,
     outlineStyle: 'none',
   } as any,
   errorText: {

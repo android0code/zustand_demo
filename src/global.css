@@ -51,9 +51,24 @@ html {
   color: inherit;
 }
 
-/* Smooth focus transitions */
-*:focus-visible {
+/* Smooth focus transitions for buttons and interactive non-input elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
   outline: 2px solid rgba(99, 102, 241, 0.5);
   outline-offset: 2px;
   border-radius: 8px;
+}
+
+/* Remove ugly rounded focus ring and border radius from form inputs */
+input,
+textarea,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
