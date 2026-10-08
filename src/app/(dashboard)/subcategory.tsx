@@ -22,7 +22,6 @@ import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useProductStore, type ProductSortOption } from '@/store/use-product-store';
-import { useCartStore } from '@/store/use-cart-store';
 import { RazorpayCheckoutModal } from '@/components/ui/razorpay-checkout-modal';
 import { WebFooter } from '@/components/ui/web-footer';
 import type { Product } from '@/services/api';
@@ -53,8 +52,6 @@ export default function SubcategoryScreen() {
   const fetchCategories = useProductStore((state) => state.fetchCategories);
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const isLoading = useProductStore((state) => state.isLoading);
-
-  const totalCartItems = useCartStore((state) => state.getTotalItems());
 
   // Category and subcategory state
   const initialCategory = params.categoryId || (categories[0]?.id ?? 'ebooks');
@@ -156,7 +153,7 @@ export default function SubcategoryScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.push('/cart')}
+            onPress={() => router.push('/orders')}
             style={({ pressed }) => [
               { position: 'relative' },
               pressed && { opacity: 0.7 },
@@ -173,15 +170,10 @@ export default function SubcategoryScreen() {
               ]}>
               <SymbolView
                 tintColor={theme.text}
-                name={{ ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' }}
+                name={{ ios: 'arrow.down.circle.fill', android: 'download', web: 'download' }}
                 size={18}
               />
             </GlassView>
-            {totalCartItems > 0 && (
-              <View style={styles.topCartBadge}>
-                <ThemedText style={styles.topCartBadgeText}>{totalCartItems}</ThemedText>
-              </View>
-            )}
           </Pressable>
         </View>
 
@@ -540,22 +532,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '800',
-  },
-  topCartBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: '#f43f5e',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topCartBadgeText: {
-    color: '#ffffff',
-    fontSize: 10,
     fontWeight: '800',
   },
   scrollContent: {

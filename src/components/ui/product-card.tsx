@@ -8,7 +8,6 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { Product } from '@/services/api';
-import { useCartStore } from '@/store/use-cart-store';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 const productCovers: Record<string, any> = {
@@ -27,10 +26,6 @@ export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [isHovered, setIsHovered] = useState(false);
-
-  const addToCart = useCartStore((state) => state.addToCart);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const quantity = useCartStore((state) => state.getItemQuantity(product.id));
 
   const getCategorySymbol = (catId: string): { ios: SFSymbol; android: AndroidSymbol } => {
     switch (catId) {
@@ -324,94 +319,29 @@ export function ProductCard({ product, onPress, onBuyNow }: ProductCardProps) {
                 </ThemedText>
               </View>
             ) : (
-              <>
-                <Pressable
-                  onPress={(e) => {
-                    e?.stopPropagation?.();
-                    if (onBuyNow) {
-                      onBuyNow(product);
-                    } else {
-                      router.push({
-                        pathname: '/(dashboard)/product-details',
-                        params: { id: product.id },
-                      });
-                    }
-                  }}
-                  style={({ pressed }) => [
-                    styles.prominentBuyBtn,
-                    pressed && styles.buttonPressed,
-                  ]}>
-                  <SymbolView
-                    name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
-                    tintColor="#ffffff"
-                    size={14}
-                  />
-                  <ThemedText style={styles.prominentBuyText}>Buy Now</ThemedText>
-                </Pressable>
-
-                {/* Quick Cart Button or Stepper */}
-                {quantity === 0 ? (
-                  <Pressable
-                    onPress={(e) => {
-                      e?.stopPropagation?.();
-                      addToCart(product);
-                    }}
-                    style={({ pressed }) => [
-                      styles.quickCartBtn,
-                      {
-                        backgroundColor: isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : 'rgba(0, 0, 0, 0.05)',
-                        borderColor: isDark
-                          ? 'rgba(255, 255, 255, 0.14)'
-                          : 'rgba(0, 0, 0, 0.1)',
-                      },
-                      pressed && styles.buttonPressed,
-                    ]}>
-                    <SymbolView
-                      tintColor={theme.text}
-                      name={{ ios: 'cart.badge.plus', android: 'add_shopping_cart', web: 'add_shopping_cart' }}
-                      size={16}
-                    />
-                  </Pressable>
-                ) : (
-                  <View
-                    style={[
-                      styles.stepperContainer,
-                      {
-                        backgroundColor: isDark
-                          ? `${product.colorAccent}18`
-                          : `${product.colorAccent}10`,
-                        borderColor: `${product.colorAccent}40`,
-                      },
-                    ]}>
-                    <Pressable
-                      onPress={(e) => {
-                        e?.stopPropagation?.();
-                        updateQuantity(product.id, quantity - 1);
-                      }}
-                      style={styles.stepperBtn}>
-                      <ThemedText type="smallBold" style={{ color: product.colorAccent, fontSize: 13 }}>
-                        −
-                      </ThemedText>
-                    </Pressable>
-                    <ThemedText
-                      style={[styles.stepperQuantity, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                      {quantity}
-                    </ThemedText>
-                    <Pressable
-                      onPress={(e) => {
-                        e?.stopPropagation?.();
-                        updateQuantity(product.id, quantity + 1);
-                      }}
-                      style={styles.stepperBtn}>
-                      <ThemedText type="smallBold" style={{ color: product.colorAccent, fontSize: 13 }}>
-                        +
-                      </ThemedText>
-                    </Pressable>
-                  </View>
-                )}
-              </>
+              <Pressable
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  if (onBuyNow) {
+                    onBuyNow(product);
+                  } else {
+                    router.push({
+                      pathname: '/(dashboard)/product-details',
+                      params: { id: product.id },
+                    });
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.prominentBuyBtn,
+                  pressed && styles.buttonPressed,
+                ]}>
+                <SymbolView
+                  name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+                  tintColor="#ffffff"
+                  size={14}
+                />
+                <ThemedText style={styles.prominentBuyText}>Buy Now</ThemedText>
+              </Pressable>
             )}
           </View>
           </View>
@@ -656,43 +586,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.4,
   },
-  quickCartBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      web: {
-        transition: 'all 0.2s ease',
-        cursor: 'pointer',
-      } as any,
-    }),
-  },
   buttonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.96 }],
-  },
-  stepperContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1.5,
-    paddingHorizontal: 3,
-    height: 32,
-  },
-  stepperBtn: {
-    paddingHorizontal: 8,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepperQuantity: {
-    fontSize: 12,
-    fontWeight: '800',
-    minWidth: 16,
-    textAlign: 'center',
   },
   comingSoonBtn: {
     flex: 1,

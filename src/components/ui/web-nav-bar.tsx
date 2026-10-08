@@ -14,7 +14,6 @@ import { GlassView } from 'expo-glass-effect';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useCartStore } from '@/store/use-cart-store';
 import { useProductStore } from '@/store/use-product-store';
 
 export function WebNavBar() {
@@ -27,7 +26,6 @@ export function WebNavBar() {
   const isDesktop = width >= 860;
   const isTablet = width >= 640 && width < 860;
 
-  const totalCartItems = useCartStore((s) => s.getTotalItems());
   const selectedCategory = useProductStore((s) => s.selectedCategory);
   const setSelectedCategory = useProductStore((s) => s.setSelectedCategory);
   const searchQuery = useProductStore((s) => s.searchQuery);
@@ -54,7 +52,6 @@ export function WebNavBar() {
 
   const isCurrentRoute = (route: string) => {
     if (route === 'orders') return pathname.includes('orders');
-    if (route === 'cart') return pathname.includes('cart');
     if (route === 'about') return pathname.includes('about-contact');
     return false;
   };
@@ -262,55 +259,6 @@ export function WebNavBar() {
               )}
             </Pressable>
 
-            {/* Cart Button with Reactive Badge */}
-            <Pressable
-              onPress={() => router.push('/(dashboard)/cart')}
-              style={({ pressed }) => [
-                styles.cartButton,
-                isCurrentRoute('cart') && {
-                  backgroundColor: isDark
-                    ? 'rgba(99, 102, 241, 0.25)'
-                    : 'rgba(99, 102, 241, 0.15)',
-                  borderColor: isDark ? '#6366f1' : '#4f46e5',
-                },
-                {
-                  backgroundColor: isDark
-                    ? 'rgba(255, 255, 255, 0.06)'
-                    : 'rgba(0, 0, 0, 0.04)',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.9)',
-                },
-                pressed && styles.pressedOpacity,
-              ]}>
-              <View style={styles.cartIconContainer}>
-                <SymbolView
-                  name={{ ios: 'bag.fill', android: 'shopping_bag', web: 'shopping_bag' }}
-                  tintColor={theme.text}
-                  size={19}
-                />
-                {totalCartItems > 0 && (
-                  <View style={styles.cartBadge}>
-                    <Text style={styles.cartBadgeText}>
-                      {totalCartItems > 99 ? '99+' : totalCartItems}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {isDesktop && (
-                <Text
-                  style={[
-                    styles.actionBtnText,
-                    {
-                      color: isCurrentRoute('cart')
-                        ? isDark
-                          ? '#a5b4fc'
-                          : '#4f46e5'
-                        : theme.text,
-                    },
-                  ]}>
-                  Cart
-                </Text>
-              )}
-            </Pressable>
           </View>
         </View>
       </View>
@@ -489,57 +437,9 @@ const styles = StyleSheet.create({
       } as any,
     }),
   },
-  cartButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    ...Platform.select({
-      web: {
-        transition: 'all 0.2s ease',
-        cursor: 'pointer',
-      } as any,
-    }),
-  },
   actionBtnText: {
     fontSize: 12,
     fontWeight: '600',
-  },
-  cartIconContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -10,
-    backgroundColor: '#f43f5e',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 2px 8px rgba(244, 63, 94, 0.4)',
-        animationKeyframes: 'pulse',
-        animationDuration: '2s',
-        animationTimingFunction: 'ease-in-out',
-        animationIterationCount: 'infinite',
-      } as any,
-    }),
-  },
-  cartBadgeText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '800',
   },
   pressedOpacity: {
     opacity: 0.8,

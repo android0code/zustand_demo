@@ -25,7 +25,6 @@ import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useCartStore } from '@/store/use-cart-store';
 import { useOrderStore } from '@/store/use-order-store';
 import { useAddressStore } from '@/store/use-address-store';
 import { useThemeStore, type ThemeMode } from '@/store/use-theme-store';
@@ -54,7 +53,6 @@ export default function ProfileScreen() {
   const isDark = colorScheme === 'dark';
 
   const orders = useOrderStore((state) => state.orders);
-  const totalCartItems = useCartStore((state) => state.getTotalItems());
   const addresses = useAddressStore((state) => state.addresses);
   const themeMode = useThemeStore((state) => state.themeMode);
   const setThemeMode = useThemeStore((state) => state.setThemeMode);
@@ -176,14 +174,6 @@ export default function ProfileScreen() {
           iconColor: '#6366f1',
           badge: orders.length > 0 ? orders.length : undefined,
           onPress: () => router.push('/orders'),
-        },
-        {
-          title: 'Shopping Cart',
-          subtitle: 'Items ready for checkout & payment',
-          icon: { ios: 'cart.fill', android: 'shopping_cart' },
-          iconColor: '#8b5cf6',
-          badge: totalCartItems > 0 ? totalCartItems : undefined,
-          onPress: () => router.push('/cart'),
         },
         {
           title: 'Delivery Addresses',
@@ -488,31 +478,6 @@ export default function ProfileScreen() {
               ]}
             />
 
-            {/* Cart */}
-            <Pressable
-              onPress={() => router.push('/cart')}
-              style={({ pressed }) => [styles.hubColumn, pressed && { opacity: 0.7 }]}>
-              <View style={[styles.hubIconCircle, { backgroundColor: 'rgba(139, 92, 246, 0.12)' }]}>
-                <SymbolView
-                  tintColor="#8b5cf6"
-                  name={{ ios: 'cart.fill', android: 'shopping_cart', web: 'shopping_cart' }}
-                  size={16}
-                />
-              </View>
-              <ThemedText type="smallBold" style={styles.hubValue}>
-                {totalCartItems}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.hubLabel}>
-                In Cart
-              </ThemedText>
-            </Pressable>
-
-            <View
-              style={[
-                styles.hubDivider,
-                { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
-              ]}
-            />
 
             {/* Addresses */}
             <Pressable

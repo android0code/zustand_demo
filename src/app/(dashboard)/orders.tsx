@@ -26,7 +26,6 @@ import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useOrderStore } from '@/store/use-order-store';
-import { useCartStore } from '@/store/use-cart-store';
 import type { OrderStatus } from '@/services/api';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
@@ -40,7 +39,6 @@ export default function OrdersScreen() {
   const isLoading = useOrderStore((state) => state.isLoading);
   const fetchOrders = useOrderStore((state) => state.fetchOrders);
   const downloadOrderItem = useOrderStore((state) => state.downloadOrderItem);
-  const addToCart = useCartStore((state) => state.addToCart);
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);

@@ -182,13 +182,14 @@ export async function openOfficialRazorpayCheckout(
         }
 
         let friendlyMsg = errorDesc || 'Payment was not completed';
+        const combinedError = `${errorDesc} ${errorReason} ${errorCode}`.toLowerCase();
         if (
-          errorReason.includes('international') ||
-          errorDesc.toLowerCase().includes('international') ||
-          errorCode.includes('international')
+          combinedError.includes('international') ||
+          combinedError.includes('business') ||
+          combinedError.includes('not allowed')
         ) {
           friendlyMsg =
-            'International payments are not enabled on this Razorpay merchant account. In Test Mode: please choose UPI, Netbanking (click the green "Success" button), or use domestic test card 4012 0000 0000 0002. (Do not use 4242 which is a foreign card).';
+            'International cards are disabled on this Razorpay merchant account. In Test Mode: please use domestic test card 4012 0000 0000 0002, or choose UPI / Netbanking and click the green "Success" button. (Do not use card 4242 which is flagged as foreign).';
         }
 
         if (options.onError) {

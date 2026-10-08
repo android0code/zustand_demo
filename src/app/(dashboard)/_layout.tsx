@@ -28,6 +28,7 @@ export default function DashboardLayout() {
         <Tabs.Screen
           name="cart"
           options={{
+            href: null,
             title: 'Cart & Checkout',
           }}
         />

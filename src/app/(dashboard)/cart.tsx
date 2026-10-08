@@ -62,6 +62,10 @@ export default function CartScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isRazorpayModalVisible, setIsRazorpayModalVisible] = useState(false);
 
+  useEffect(() => {
+    router.replace('/(dashboard)');
+  }, []);
+
   const getCategorySymbol = (catId: string): { ios: SFSymbol; android: AndroidSymbol } => {
     switch (catId) {
       case 'ebooks':

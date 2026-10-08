@@ -27,7 +27,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/use-auth-store';
 import { useProductStore } from '@/store/use-product-store';
-import { useCartStore } from '@/store/use-cart-store';
 import type { Product } from '@/services/api';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
@@ -48,9 +47,6 @@ export default function ShopHomeScreen() {
   const setSelectedCategory = useProductStore((state) => state.setSelectedCategory);
   const setSearchQuery = useProductStore((state) => state.setSearchQuery);
   const getFilteredProducts = useProductStore((state) => state.getFilteredProducts);
-
-  const totalCartItems = useCartStore((state) => state.getTotalItems());
-  const cartTotal = useCartStore((state) => state.getTotal());
 
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
 
@@ -368,43 +364,6 @@ export default function ShopHomeScreen() {
           <WebFooter />
         </ScrollView>
 
-        {/* Floating Quick Checkout Dock (only when cart has items) */}
-        {totalCartItems > 0 && (
-          <Pressable
-            onPress={() => router.push('/cart')}
-            style={({ pressed }) => [
-              styles.floatingCartDock,
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}>
-            <GlassCard variant="glow" style={styles.floatingCartInner}>
-              <View style={styles.floatingCartLeft}>
-                <GradientView
-                  colors={Gradients.sunset}
-                  direction="to-bottom-right"
-                  style={styles.cartBadgeDot}>
-                  <ThemedText style={styles.cartBadgeDotText}>{totalCartItems}</ThemedText>
-                </GradientView>
-                <View>
-                  <ThemedText type="smallBold" style={styles.floatingCartTitle}>
-                    {totalCartItems} {totalCartItems === 1 ? 'item' : 'items'} in Cart
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Instant Digital Delivery
-                  </ThemedText>
-                </View>
-              </View>
-
-              <View style={styles.floatingCartRight}>
-                <ThemedText style={styles.floatingCartPrice}>
-                  {RAZORPAY_CONFIG.currencySymbol}{cartTotal.toFixed(2)}
-                </ThemedText>
-                <View style={styles.cartCtaPill}>
-                  <ThemedText style={styles.cartCtaText}>Checkout →</ThemedText>
-                </View>
-              </View>
-            </GlassCard>
-          </Pressable>
-        )}
       </SafeAreaView>
 
       {/* Razorpay Checkout Modal for 1-Click Instant Buy */}
@@ -801,79 +760,5 @@ const styles = StyleSheet.create({
   },
   productGridItem: {
     padding: 0,
-  },
-  floatingCartDock: {
-    position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
-    maxWidth: 540,
-    alignSelf: 'center',
-    zIndex: 90,
-    ...Platform.select({
-      web: {
-        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-      } as any,
-    }),
-  },
-  floatingCartInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 20,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(99, 102, 241, 0.1)',
-      } as any,
-    }),
-  },
-  floatingCartLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  cartBadgeDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartBadgeDotText: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  floatingCartTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  floatingCartRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  floatingCartPrice: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#6366f1',
-  },
-  cartCtaPill: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
-      } as any,
-    }),
-  },
-  cartCtaText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
   },
 });

@@ -335,7 +335,7 @@ export default function PolicyScreen({ defaultTab }: { defaultTab?: PolicyTab } 
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" style={styles.paragraph}>
           We do not use invasive third-party ad retargeting trackers or cross-site fingerprinting. We use minimal,
-          first-party local storage cookies strictly required to maintain your active shopping cart and color theme preferences.
+          first-party local storage strictly required to maintain your order session and color theme preferences.
         </ThemedText>
       </View>
 

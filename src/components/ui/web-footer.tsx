@@ -153,13 +153,6 @@ export function WebFooter() {
                   </ThemedText>
                 </Pressable>
 
-                <Pressable
-                  onPress={() => handleNavigate('/cart')}
-                  style={({ pressed }) => [styles.footerLink, pressed && { opacity: 0.6 }]}>
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.footerLinkText}>
-                    Cart & Checkout
-                  </ThemedText>
-                </Pressable>
 
                 <View style={styles.supportContactPill}>
                   <SymbolView

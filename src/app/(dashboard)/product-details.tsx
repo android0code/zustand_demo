@@ -25,7 +25,6 @@ import { Spacing, MaxContentWidth, Gradients } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useProductStore } from '@/store/use-product-store';
-import { useCartStore } from '@/store/use-cart-store';
 import { useOrderStore } from '@/store/use-order-store';
 import { triggerBrowserDownload, type Product, type Order } from '@/services/api';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
@@ -47,18 +46,11 @@ export default function ProductDetailsScreen() {
   const products = useProductStore((state) => state.products);
   const categories = useProductStore((state) => state.categories);
   const fetchProducts = useProductStore((state) => state.fetchProducts);
-  const addToCart = useCartStore((state) => state.addToCart);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const totalCartItems = useCartStore((state) => state.getTotalItems());
   const placeOrder = useOrderStore((state) => state.placeOrder);
 
   // Find current product
   const productId = params.id || 'prod-ebook-1';
   const product = products.find((p) => p.id === productId) || products[0];
-
-  const quantityInCart = useCartStore((state) =>
-    product ? state.getItemQuantity(product.id) : 0
-  );
 
   useEffect(() => {
     if (products.length === 0) {
@@ -204,7 +196,13 @@ export default function ProductDetailsScreen() {
   const handlePay = async () => {
     if (!validateEmail(email)) {
       if (Platform.OS === 'web') {
-        alert('Please enter a valid email address for instant digital delivery.');
+        const inputElem = typeof document !== 'undefined' ? document.getElementById('delivery-email-input') : null;
+        if (inputElem) {
+          inputElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          inputElem.focus();
+        } else {
+          alert('Please enter a valid email address for instant digital delivery.');
+        }
       } else {
         Alert.alert('Email Required', 'Please enter a valid email address for instant digital delivery.');
       }
@@ -310,18 +308,13 @@ export default function ProductDetailsScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.push('/(dashboard)/cart')}
+            onPress={() => router.push('/(dashboard)/orders')}
             style={({ pressed }) => [styles.cartBtn, pressed && { opacity: 0.7 }]}>
             <SymbolView
-              name={{ ios: 'bag.fill', android: 'shopping_bag', web: 'shopping_bag' }}
+              name={{ ios: 'arrow.down.circle.fill', android: 'download', web: 'download' }}
               tintColor={theme.text}
               size={18}
             />
-            {totalCartItems > 0 && (
-              <View style={styles.cartBadge}>
-                <ThemedText style={styles.cartBadgeText}>{totalCartItems}</ThemedText>
-              </View>
-            )}
           </Pressable>
         </View>
 
@@ -438,45 +431,6 @@ export default function ProductDetailsScreen() {
                         </ThemedText>
                       </Pressable>
 
-                      {quantityInCart === 0 ? (
-                        <Pressable
-                          onPress={() => addToCart(product)}
-                          style={({ pressed }) => [
-                            styles.addToCartBtn,
-                            {
-                              backgroundColor: isDark
-                                ? 'rgba(255, 255, 255, 0.08)'
-                                : 'rgba(0, 0, 0, 0.05)',
-                              borderColor: isDark
-                                ? 'rgba(255, 255, 255, 0.15)'
-                                : 'rgba(0, 0, 0, 0.1)',
-                            },
-                            pressed && { opacity: 0.8 },
-                          ]}>
-                          <SymbolView
-                            tintColor={theme.text}
-                            name={{ ios: 'cart.badge.plus', android: 'add_shopping_cart', web: 'add_shopping_cart' }}
-                            size={16}
-                          />
-                          <ThemedText type="smallBold">Add to Cart</ThemedText>
-                        </Pressable>
-                      ) : (
-                        <View style={styles.cartStepper}>
-                          <Pressable
-                            onPress={() => updateQuantity(product.id, quantityInCart - 1)}
-                            style={styles.stepperBtn}>
-                            <ThemedText type="smallBold">−</ThemedText>
-                          </Pressable>
-                          <ThemedText type="smallBold" style={styles.stepperText}>
-                            {quantityInCart} in Cart
-                          </ThemedText>
-                          <Pressable
-                            onPress={() => updateQuantity(product.id, quantityInCart + 1)}
-                            style={styles.stepperBtn}>
-                            <ThemedText type="smallBold">+</ThemedText>
-                          </Pressable>
-                        </View>
-                      )}
 
                       <View style={styles.instantBadge}>
                         <SymbolView
@@ -806,6 +760,7 @@ export default function ProductDetailsScreen() {
                           size={15}
                         />
                         <TextInput
+                          nativeID="delivery-email-input"
                           value={email}
                           onChangeText={(t) => {
                             setEmail(t);
