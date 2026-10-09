@@ -188,8 +188,9 @@ export async function openOfficialRazorpayCheckout(
           combinedError.includes('business') ||
           combinedError.includes('not allowed')
         ) {
-          friendlyMsg =
-            'International cards are disabled on this Razorpay merchant account. In Test Mode: please use domestic test card 4012 0000 0000 0002, or choose UPI / Netbanking and click the green "Success" button. (Do not use card 4242 which is flagged as foreign).';
+          friendlyMsg = RAZORPAY_CONFIG.isTestMode
+            ? 'International cards are disabled on this Razorpay merchant account. In Test Mode: please use domestic test card 4012 0000 0000 0002, or choose UPI / Netbanking and click the green "Success" button. (Do not use card 4242 which is flagged as foreign).'
+            : 'International cards are not supported on this merchant account. Please choose UPI, Indian Debit/Credit Card, or Netbanking.';
         }
 
         if (options.onError) {

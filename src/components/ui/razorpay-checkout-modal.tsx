@@ -185,7 +185,9 @@ export function RazorpayCheckoutModal({
             setStep('form');
             setPaymentNotice(
               err.description ||
-                'International cards are not supported on this Razorpay merchant account. In test mode, please choose UPI or Netbanking in the Razorpay popup, or click Instant Test Pay.'
+                (RAZORPAY_CONFIG.isTestMode
+                  ? 'International cards are not supported on this Razorpay merchant account. In test mode, please choose UPI or Netbanking in the Razorpay popup, or click Instant Test Pay.'
+                  : 'International cards are not supported on this merchant account. Please choose UPI, Indian Cards, or Netbanking in the Razorpay checkout.')
             );
           },
         });

@@ -77,7 +77,11 @@ export const RAZORPAY_TEST_CREDENTIALS = {
 // 2. LIVE CREDENTIALS (PRODUCTION REAL MONEY PAYMENTS)
 // -----------------------------------------------------------------------------
 export const RAZORPAY_LIVE_CREDENTIALS = {
-  keyId: process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_ID || 'rzp_live_TkXit42sKW1toa',
+  keyId:
+    process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_ID ||
+    (process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_live_')
+      ? process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID
+      : 'rzp_live_TkXit42sKW1toa'),
   keySecret:
     process.env.RAZORPAY_LIVE_KEY_SECRET ||
     process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_SECRET ||
@@ -87,27 +91,42 @@ export const RAZORPAY_LIVE_CREDENTIALS = {
 // -----------------------------------------------------------------------------
 // 3. SMART ACTIVE CONFIGURATION
 // -----------------------------------------------------------------------------
-// Development/Debug detection:
-const isDevEnvironment =
-  (typeof __DEV__ !== 'undefined' && __DEV__) ||
-  process.env.NODE_ENV !== 'production' ||
-  process.env.EXPO_PUBLIC_APP_ENV === 'development';
-
-// In development/debug, testing credentials are used for safe development.
-// Set EXPO_PUBLIC_IS_TEST_MODE='false' in production to activate live payments.
-export const isRazorpayTestMode: boolean =
-  process.env.EXPO_PUBLIC_IS_TEST_MODE !== 'false' || isDevEnvironment;
+// Mode toggle logic:
+// 1. Explicit EXPO_PUBLIC_IS_TEST_MODE:
+//    - 'false' => Live production mode (real money payments)
+//    - 'true'  => Test mode (safe sandbox)
+// 2. If not explicitly specified:
+//    - In production builds (NODE_ENV === 'production' or EXPO_PUBLIC_APP_ENV === 'production' or web exports) => default to Live mode (false)
+//    - In local dev (__DEV__ === true) => default to Test mode (true)
+export const isRazorpayTestMode: boolean = (() => {
+  if (process.env.EXPO_PUBLIC_IS_TEST_MODE === 'false') {
+    return false;
+  }
+  if (process.env.EXPO_PUBLIC_IS_TEST_MODE === 'true') {
+    return true;
+  }
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.EXPO_PUBLIC_APP_ENV === 'production'
+  ) {
+    return false;
+  }
+  const isDev =
+    (typeof __DEV__ !== 'undefined' && __DEV__) ||
+    process.env.EXPO_PUBLIC_APP_ENV === 'development';
+  return Boolean(isDev);
+})();
 
 export const RAZORPAY_CONFIG: RazorpayConfig = {
   // Key ID: switches between test and live based on environment
   keyId: isRazorpayTestMode
-    ? RAZORPAY_TEST_CREDENTIALS.keyId
-    : RAZORPAY_LIVE_CREDENTIALS.keyId,
+    ? (process.env.EXPO_PUBLIC_RAZORPAY_TEST_KEY_ID || RAZORPAY_TEST_CREDENTIALS.keyId)
+    : (process.env.EXPO_PUBLIC_RAZORPAY_LIVE_KEY_ID || RAZORPAY_LIVE_CREDENTIALS.keyId),
 
   // Key Secret: switches between test and live
   keySecret: isRazorpayTestMode
-    ? RAZORPAY_TEST_CREDENTIALS.keySecret
-    : RAZORPAY_LIVE_CREDENTIALS.keySecret,
+    ? (process.env.RAZORPAY_TEST_KEY_SECRET || RAZORPAY_TEST_CREDENTIALS.keySecret)
+    : (process.env.RAZORPAY_LIVE_KEY_SECRET || RAZORPAY_LIVE_CREDENTIALS.keySecret),
 
   // Currency & Store Branding
   currency: process.env.EXPO_PUBLIC_CURRENCY || 'INR',
